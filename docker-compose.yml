@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  vroom_db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: vroom_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    networks:
+      - bridge
+
+  web:
+    build: .
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - vroom_db
+    networks:
+      - bridge
+
+networks:
+  bridge:
+    driver: bridge
+
+volumes:
+  postgres_data:

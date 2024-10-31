@@ -1,0 +1,64 @@
+{% comment %} <div class="bg-white shadow-md p-4 flex items-center justify-between">
+    <div class="flex items-center space-x-4">
+        <button class="text-gray-500 hover:text-gray-700 focus:outline-none">
+            <svg class="h-6 w-6" fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor"><!-- icon SVG --></svg>
+        </button>
+    </div>
+    <div class="flex items-center space-x-4">
+        <button class="text-gray-500 hover:text-gray-700">
+            <svg class="h-6 w-6" fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor"><!-- icon SVG --></svg>
+        </button>
+        <div class="flex items-center space-x-2">
+            <span class="text-gray-700 font-medium">Name Surname</span>
+            <svg class="h-5 w-5 text-gray-500" fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor"><!-- icon SVG --></svg>
+        </div>
+    </div>
+</div> {% endcomment %}
+
+
+<div class="bg-white shadow-md p-4 flex items-center justify-between">
+    <div class="flex items-center space-x-4">
+        <button class="text-gray-500 hover:text-gray-700 focus:outline-none">
+            <svg class="h-6 w-6" fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor"><!-- icon SVG --></svg>
+        </button>
+    </div>
+    <div class="flex items-center space-x-4 relative">
+        <button class="text-gray-500 hover:text-gray-700">
+            <svg class="h-6 w-6" fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor"><!-- icon SVG --></svg>
+        </button>
+        
+        <!-- Name Dropdown Toggle -->
+        <div class="relative">
+            <button onclick="toggleDropdown()" class="flex items-center space-x-2 text-gray-700 font-medium focus:outline-none">
+                <span>Name Surname</span>
+                <!-- Arrow Down Icon -->
+                <svg class="h-5 w-5 text-gray-500" fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            
+            <!-- Dropdown Menu -->
+            <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg">
+                <a href="/signup/" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Sign Up</a>
+                <a href="/'signup/" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Sign Out</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleDropdown() {
+        const dropdown = document.getElementById("dropdownMenu");
+        dropdown.classList.toggle("hidden");
+    }
+    
+    // Optional: Close dropdown when clicking outside
+    window.addEventListener("click", function(event) {
+        const dropdown = document.getElementById("dropdownMenu");
+        const toggleButton = dropdown.previousElementSibling;
+        
+        if (!dropdown.contains(event.target) && !toggleButton.contains(event.target)) {
+            dropdown.classList.add("hidden");
+        }
+    });
+</script>

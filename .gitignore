@@ -1,0 +1,27 @@
+# Ignore database files
+*.sqlite3
+*.sqlite3-journal
+
+# Ignore Python bytecode files
+*/**/__pycache__/
+*.pyc
+
+# Ignore environment configuration files
+.env
+
+# Ignore log files
+*.log
+*.log.*
+
+# Ignore IDE-specific files
+.vscode/
+.idea/
+
+#ignore virtual env
+env
+
+# Ignore Node Modules
+node_modules
+
+# Ignore certificates
+certificates
