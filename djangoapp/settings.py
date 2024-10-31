@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 import cloudinary
+import django_heroku
 
 cloudinary.config(
     cloud_name = os.environ.get('CLOUD_NAME'),
@@ -162,3 +163,4 @@ COMPRESS_ROOT = BASE_DIR / 'static'
 COMPRESS_ENABLED = True
 
 STATICFILES_FINDERS = ('compressor.finders.CompressorFinder',)
+django_heroku.settings(locals())
