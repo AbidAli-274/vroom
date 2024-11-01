@@ -1,6 +1,6 @@
 from django.utils import timezone
 from inventory.models import BikeInventory,RentalLog,Addon
-from inventory.serializers import BikeInventorySerializer,AddonSerializer,RentalLogSerializer
+from inventory.serializers import BikeInventoryLimitedSerializer, BikeInventorySerializer,AddonSerializer,RentalLogSerializer
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
@@ -20,7 +20,7 @@ class BikeInventoryVew(APIView):
         responses={
             200: openapi.Response(
                 description="Retrieve all Class xyz motorcycles & details",
-                schema=BikeInventorySerializer(many=True)
+                schema=BikeInventoryLimitedSerializer(many=True)
             )
         }
     )
@@ -40,7 +40,7 @@ class BikeInventoryVew(APIView):
             if request.accepted_renderer.format == 'html':
                 return Response({'bike_inventory': queryset}, template_name='inventory/bike_inventory.html')
 
-            serializer = BikeInventorySerializer(queryset, many=True)
+            serializer = BikeInventoryLimitedSerializer(queryset, many=True)
             return Response(serializer.data)
         
         except Exception as e:

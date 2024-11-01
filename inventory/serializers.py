@@ -5,6 +5,11 @@ from .models import Addon, BikeInventory, RentalLog
 class BikeInventorySerializer(serializers.ModelSerializer):
     class Meta:
         model = BikeInventory
+        fields = "__all__"
+
+class BikeInventoryLimitedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BikeInventory
         fields = ['id', 'vehicle', 'photo', 'brand', 'color_edition', 'license_plate']
 
 

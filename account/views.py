@@ -8,6 +8,7 @@ from drf_yasg import openapi
 from rest_framework.views import APIView
 from rest_framework import status
 
+
 class SignupView(APIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
 
@@ -27,30 +28,15 @@ class SignupView(APIView):
             return Response(template_name='account/signup.html')
         
         # Return JSON data if the requested format is JSON
-        serializer = MemberSerializer(many=True)  # You can provide a queryset if needed
+        serializer = MemberSerializer(many=True) 
         return Response(serializer.data)
     
 class HomeView(APIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
 
-    @swagger_auto_schema(
-        responses={
-            200: openapi.Response(
-                description="A JSON response with a list of all members",
-                schema=MemberSerializer(many=True)
-            )
-        }
-    )
+    @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
-
-        if request.accepted_renderer.format == 'html':
-            # Render HTML template if the requested format is HTML
-            # data = {'users': queryset}  # Pass data to the template if needed
-            return Response(template_name='base.html')
-        
-        # Return JSON data if the requested format is JSON
-        serializer = MemberSerializer(many=True)  # You can provide a queryset if needed
-        return Response(serializer.data)
+        return Response(template_name='base.html')
     
 class MemberView(APIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
