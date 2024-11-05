@@ -1,39 +1,109 @@
-
-
 {% extends 'base.html' %}
 
 {% block content %}
 <div class="container mx-auto mt-8">
     <!-- Search Input -->
-    <div class="flex justify mb-4">
+    <div class="flex justify-between mb-4">
         <input 
             type="text" 
-            class="w-full sm:w-1/3 p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+            class="w-full sm:w-1/3 p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-500" 
             placeholder="Search..."
         />
+        <button 
+            id="addRentalLogBtn" 
+            class="ml-4 p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+            Add Rental-Log
+        </button>
     </div>
+    
     <h2 class="text-2xl font-semibold mb-4 text-gray-800">Rental Logs</h2>
     
-    
-    
+    <!-- Add Rental Log Form -->
+    <div id="addRentalLogForm" class="hidden mb-8">
+        <div class="p-4 bg-gray-100 rounded-lg shadow">
+            <h3 class="text-xl font-semibold mb-4">Create Rental Log</h3>
+            <div id="errorMessage" class="hidden text-red-600 mt-2"></div>
+            <form id="addRentalLog" method="post" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Member</label>
+                    <select name="member" class="w-full p-3 border border-gray-300 rounded-md" required>
+                        <option value="">Select Member</option>
+                        {% for member in members %}
+                        <option value="{{ member.id }}">{{ member.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Vehicle</label>
+                    <select name="vehicle" class="w-full p-3 border border-gray-300 rounded-md" required>
+                        <option value="">Select Vehicle</option>
+                        {% for vehicle in vehicles %}
+                        <option value="{{ vehicle.id }}">{{ vehicle.vehicle }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Start Date & Time</label>
+                    <input type="datetime-local" name="start_datetime" class="w-full p-3 border border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">End Date & Time</label>
+                    <input type="datetime-local" name="end_datetime" class="w-full p-3 border border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Rental Days</label>
+                    <input type="number" name="rental_days" class="w-full p-3 border border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Rental Price</label>
+                    <input type="number" name="rental_price" class="w-full p-3 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Deposit</label>
+                    <input type="number" name="price_deposit" class="w-full p-3 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Addon Deposit</label>
+                    <input type="number" name="price_deposit_addon" class="w-full p-3 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Paid</label>
+                    <select name="paid" class="w-full p-3 border border-gray-300 rounded-md">
+                        <option value="false">No</option>
+                        <option value="true">Yes</option>
+                    </select>
+                </div>
+                <div >
+                    <label class="block text-sm font-medium text-gray-700">Remarks</label>
+                    <textarea rows="1" name="remarks" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks"></textarea>
+                </div>
+                <div class="sm:col-span-2">
+                    <button type="submit" class="w-full p-4 text-white bg-gray-600 rounded-lg hover:bg-gray-700">Create Rental Log</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Table -->
     <div class="overflow-x-auto">
-        <table class="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+        <table class="min-w-full bg-white border border-gray-200">
             <thead>
-                <tr class="bg-gray-100 text-gray-700 uppercase text-sm leading-normal">
-                    <th class="py-3 px-4 text-left border-b border-gray-200">Member Name</th>
-                    <th class="py-3 px-4 text-left border-b border-gray-200">Vehicle</th>
-                    <th class="py-3 px-4 text-left border-b border-gray-200">Start Date & Time</th>
-                    <th class="py-3 px-4 text-left border-b border-gray-200">End Date & Time</th>
-                    <th class="py-3 px-4 text-left border-b border-gray-200">Rental Days</th>
-                    <th class="py-3 px-4 text-left border-b border-gray-200">Rental Price</th>
-                    <th class="py-3 px-4 text-left border-b border-gray-200">Deposit</th>
-                    <th class="py-3 px-4 text-left border-b border-gray-200">Addon Deposit</th>
-                    <th class="py-3 px-4 text-left border-b border-gray-200">Paid</th>
-                    <th class="py-3 px-4 text-left border-b border-gray-200">Remarks</th>
+                <tr class="bg-gray-100 border-b">
+                    <th class="py-3 px-4 text-left border-r border-gray-200">Member Name</th>
+                    <th class="py-3 px-4 text-left border-r border-gray-200">Vehicle</th>
+                    <th class="py-3 px-4 text-left border-r border-gray-200">Start Date & Time</th>
+                    <th class="py-3 px-4 text-left border-r border-gray-200">End Date & Time</th>
+                    <th class="py-3 px-4 text-left border-r border-gray-200">Rental Days</th>
+                    <th class="py-3 px-4 text-left border-r border-gray-200">Rental Price</th>
+                    <th class="py-3 px-4 text-left border-r border-gray-200">Deposit</th>
+                    <th class="py-3 px-4 text-left border-r border-gray-200">Addon Deposit</th>
+                    <th class="py-3 px-4 text-left border-r border-gray-200">Paid</th>
+                    <th class="py-3 px-4 text-left border-r border-gray-200">Remarks</th>
                 </tr>
             </thead>
-            <tbody class="text-gray-600 text-sm font-light">
+            <tbody>
                 {% for log in rental_logs %}
                 <tr class="hover:bg-gray-50 border-b border-gray-200">
                     <td class="py-3 px-4 border-r">{{ log.member.full_name }}</td>
@@ -44,7 +114,7 @@
                     <td class="py-3 px-4 border-r">{{ log.rental_price }}</td>
                     <td class="py-3 px-4 border-r">{{ log.price_deposit }}</td>
                     <td class="py-3 px-4 border-r">{{ log.price_deposit_addon }}</td>
-                    <td class="py-3 px-4 border-r">
+                    <td class="py-3 px-4">
                         {% if log.paid %}
                             <span class="text-green-500 font-semibold">Yes</span>
                         {% else %}
@@ -62,5 +132,58 @@
         </table>
     </div>
 </div>
+
+<script>
+    // Toggle the visibility of the Add Rental Log form
+    document.getElementById('addRentalLogBtn').addEventListener('click', function () {
+        const form = document.getElementById('addRentalLogForm');
+        form.classList.toggle('hidden');
+    });
+
+    async function submitRentalLogForm(event) {
+        event.preventDefault(); // Prevent default form submission
+        const form = event.target;
+        const errorMessage = document.getElementById('errorMessage');
+        errorMessage.style.display = 'none'; // Hide previous error message
+
+        const rentalLogData = {
+            member: form.member.value,
+            vehicle: form.vehicle.value,
+            start_datetime: form.start_datetime.value,
+            end_datetime: form.end_datetime.value,
+            rental_days: form.rental_days.value,
+            rental_price: form.rental_price.value,
+            price_deposit: form.price_deposit.value || null,
+            price_deposit_addon: form.price_deposit_addon.value || null,
+            paid: form.paid.value === 'true',
+            remarks: form.remarks.value || '',
+        };
+
+        // Make the POST request to create a new rental log
+        try {
+            const response = await fetch('/inventory/rental-log/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}' // Ensure CSRF token is included
+                },
+                body: JSON.stringify(rentalLogData)
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create rental log');
+            }
+            // Optionally, you can refresh the page or update the rental logs table here
+            location.reload();
+        } catch (error) {
+            errorMessage.innerText = error.message; // Show error message
+            errorMessage.style.display = 'block'; // Show error message
+        }
+    }
+
+    document.getElementById('addRentalLog').addEventListener('submit', submitRentalLogForm);
+</script>
+
 {% endblock %}
 
+ 

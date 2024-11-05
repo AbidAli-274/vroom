@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mx-auto mt-8">
+    <!-- Search Input -->
+    <div class="flex justify-between mb-4">
+        <input 
+            type="text" 
+            class="w-full sm:w-1/3 p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-500" 
+            placeholder="Search..."
+        />
+        <button 
+            id="addMemberBtn" 
+            class="ml-4 p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+            Add Member
+        </button>
+    </div>
+    
+    <h2 class="text-2xl font-semibold mb-4">Members List</h2>
+
+    <!-- Add Member Form -->
+    <div id="addMemberForm" class="hidden mb-8">
+        <div class="p-4 bg-gray-100 rounded-lg shadow">
+            <h3 class="text-xl font-semibold mb-4">Create Member</h3>
+            <div id="errorMessage" class="hidden text-red-600 mt-2"></div>
+            <form id="addmember" method="post" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                    <input type="text" name="full_name" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Full Name" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Phone</label>
+                    <input type="text" name="phone" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Phone" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" name="email" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Email" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">NRIC</label>
+                    <input type="text" name="nric" class="w-full p-3 border border-gray-300 rounded-md" placeholder="NRIC" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Date of Birth</label>
+                    <input type="date" name="dob" class="w-full p-3 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Class Passed</label>
+                    <input type="text" name="class_passed" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Class Passed" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Issue Date</label>
+                    <input type="date" name="issue_date" class="w-full p-3 border border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Remarks</label>
+                    <textarea rows="1" name="remarks" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks"></textarea>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Address</label>
+                    <textarea rows="1" name="address" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Address"></textarea>
+                </div>
+                <div class="sm:col-span-2">
+                    <button type="submit" class="w-full p-4 text-white bg-gray-600 rounded-lg hover:bg-gray-700">Create Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white border border-gray-200">
+            <thead>
+                <tr class="bg-gray-100 border-b">
+                    <th class="py-2 px-4 border-r">Phone</th>
+                    <th class="py-2 px-4 border-r">Email</th>
+                    <th class="py-2 px-4 border-r">NRIC</th>
+                    <th class="py-2 px-4 border-r">Full Name</th>
+                    <th class="py-2 px-4 border-r">Date of Birth</th>
+                    <th class="py-2 px-4 border-r">Class Passed</th>
+                    <th class="py-2 px-4 border-r">Address</th>
+                    <th class="py-2 px-4 border-r">Issue Date</th>
+                    <th class="py-2 px-4">Remarks</th>
+                </tr>
+            </thead>
+            <tbody id="memberTableBody">
+                {% for member in Members %}
+                <tr class="border-b">
+                    <td class="py-2 px-4 border-r">{{ member.phone }}</td>
+                    <td class="py-2 px-4 border-r">{{ member.email }}</td>
+                    <td class="py-2 px-4 border-r">{{ member.nric }}</td>
+                    <td class="py-2 px-4 border-r">{{ member.full_name }}</td>
+                    <td class="py-2 px-4 border-r">{{ member.dob }}</td>
+                    <td class="py-2 px-4 border-r">{{ member.class_passed }}</td>
+                    <td class="py-2 px-4 border-r">{{ member.address }}</td>
+                    <td class="py-2 px-4 border-r">{{ member.issue_date }}</td>
+                    <td class="py-2 px-4">{{ member.remarks }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center py-4">No members found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% comment %} <script>
+    async function submitMemberForm(event) {
+        event.preventDefault(); // Prevent default form submission
+        const form = document.getElementById('addmember');
+        const errorMessage = document.getElementById('errorMessage');
+        errorMessage.style.display = 'none'; // Hide error message initially
+
+        // Gather form data
+        const memberData = {
+            full_name: form.full_name.value.trim(),
+            phone: form.phone.value.trim(),
+            email: form.email.value.trim(),
+            nric: form.nric.value.trim(),
+            dob: form.dob.value || null,
+            class_passed: form.class_passed.value.trim(),
+            issue_date: form.issue_date.value,
+            remarks: form.remarks.value.trim(),
+            address: form.address.value.trim(),
+        };
+
+        try {
+            const response = await fetch('/member/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken') // Add CSRF token
+                },
+                body: JSON.stringify(memberData)
+            });
+
+            const data = await response.json(); // Get the response data
+
+            if (response.ok) {
+                // Successful member creation
+                alert(data.message || 'Member created successfully!');
+                location.reload();
+
+                // Optionally refresh the member list or redirect
+                // await loadMemberList(); // If you want to refresh the member list
+            } else {
+                // Handle error response
+                errorMessage.textContent = data.error || 'An error occurred. Please try again.';
+                errorMessage.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            errorMessage.textContent = 'An unexpected error occurred. Please try again.';
+            errorMessage.style.display = 'block';
+        }
+    }
+
+    document.getElementById('addmember').addEventListener('submit', submitMemberForm);
+
+    // Function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Check if this cookie string begins with the name we want
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script> {% endcomment %}
+<script>
+    async function submitMemberForm(event) {
+        event.preventDefault(); // Prevent default form submission
+        const form = document.getElementById('addmember');
+        const errorMessage = document.getElementById('errorMessage');
+        errorMessage.style.display = 'none'; // Hide error message initially
+
+        // Gather form data
+        const memberData = {
+            full_name: form.full_name.value.trim(),
+            phone: form.phone.value.trim(),
+            email: form.email.value.trim(),
+            nric: form.nric.value.trim(),
+            dob: form.dob.value || null,
+            class_passed: form.class_passed.value.trim(),
+            issue_date: form.issue_date.value,
+            remarks: form.remarks.value.trim(),
+            address: form.address.value.trim(),
+        };
+
+        try {
+            const response = await fetch('/member/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken') // Add CSRF token
+                },
+                body: JSON.stringify(memberData)
+            });
+
+            const data = await response.json(); // Get the response data
+
+            if (response.ok) {
+                // Successful member creation
+                alert(data.message || 'Member created successfully!');
+                location.reload();
+            } else {
+                // Handle error response
+                errorMessage.textContent = data.error || 'An error occurred. Please try again.';
+                errorMessage.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            errorMessage.textContent = 'An unexpected error occurred. Please try again.';
+            errorMessage.style.display = 'block';
+        }
+    }
+
+    // Add event listener to the "Add Member" button
+    document.getElementById('addMemberBtn').addEventListener('click', function() {
+        const form = document.getElementById('addMemberForm');
+        form.classList.toggle('hidden'); // Toggle the 'hidden' class
+    });
+
+    document.getElementById('addmember').addEventListener('submit', submitMemberForm);
+
+    // Function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+
+{% endblock %}

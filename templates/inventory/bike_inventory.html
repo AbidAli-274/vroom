@@ -1,63 +1,175 @@
 {% extends 'base.html' %}
-
 {% block content %}
 <div class="container mx-auto mt-8">
     <!-- Search Input -->
-    <div class="flex justify mb-4">
+    <div class="flex justify-between mb-4">
         <input 
             type="text" 
-            class="w-full sm:w-1/3 p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+            class="w-full sm:w-1/3 p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-500" 
             placeholder="Search..."
         />
+        <button 
+            id="addBikeBtn" 
+            class="ml-4 p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+            Add Bike
+        </button>
     </div>
     <h2 class="text-2xl font-semibold mb-4">Bike Inventory</h2>
-    <div class="overflow-x-auto">
-        <table class="min-w-full bg-white border border-gray-200">
-            <thead>
-                <tr class="bg-gray-100 border-b">
-                    <th class="py-2 px-4 border-r">Vehicle</th>
-                    <th class="py-2 px-4 border-r">Photo</th>
-                    <th class="py-2 px-4 border-r">Brand</th>
-                    <th class="py-2 px-4 border-r">Color Edition</th>
-                    <th class="py-2 px-4 border-r">License Plate</th>
-                    <th class="py-2 px-4 border-r">Bike Class</th>
-                    <th class="py-2 px-4 border-r">Daily Deposit</th>
-                    <th class="py-2 px-4 border-r">Monthly Deposit</th>
-                    <th class="py-2 px-4 border-r">Daily Rental</th>
-                    <th class="py-2 px-4 border-r">Weekly Rental</th>
-                    <th class="py-2 px-4 border-r">Status</th>
-                    <th class="py-2 px-4">Remarks</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for bike in bike_inventory %}
-                <tr class="border-b">
-                    <td class="py-2 px-4 border-r">{{ bike.vehicle }}</td>
-                    <td class="py-2 px-4 border-r">
-                        {% if bike.photo %}
-                            {% comment %} <img src="{{ bike.photo.url }}" alt="{{ bike.vehicle }}" class="h-16 w-16 object-cover"> {% endcomment %}
-                        {% else %}
-                            No photo
-                        {% endif %}
-                    </td>
-                    <td class="py-2 px-4 border-r">{{ bike.brand }}</td>
-                    <td class="py-2 px-4 border-r">{{ bike.color_edition }}</td>
-                    <td class="py-2 px-4 border-r">{{ bike.license_plate }}</td>
-                    <td class="py-2 px-4 border-r">{{ bike.bike_class }}</td>
-                    <td class="py-2 px-4 border-r">{{ bike.daily_deposit }}</td>
-                    <td class="py-2 px-4 border-r">{{ bike.monthly_deposit }}</td>
-                    <td class="py-2 px-4 border-r">{{ bike.daily_rental }}</td>
-                    <td class="py-2 px-4 border-r">{{ bike.weekly_rental }}</td>
-                    <td class="py-2 px-4 border-r">{{ bike.status }}</td>
-                    <td class="py-2 px-4">{{ bike.remarks }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="12" class="text-center py-4">No bikes found in inventory.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+    <!-- Add Bike Form -->
+    <div id="addBikeForm" class="hidden mb-8">
+        <div class="p-4 bg-gray-100 rounded-lg shadow">
+            <h3 class="text-xl font-semibold mb-4">Create Bike</h3>
+            <div id="errorMessage" class="hidden text-red-600 mt-2"></div>
+            <form id="addbike" method="post" enctype="multipart/form-data" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Vehicle</label>
+                    <input type="text" name="vehicle" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Vehicle" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Brand</label>
+                    <input type="text" name="brand" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Brand" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Color Edition</label>
+                    <input type="text" name="color_edition" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Color Edition">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">License Plate</label>
+                    <input type="text" name="license_plate" class="w-full p-3 border border-gray-300 rounded-md" placeholder="License Plate" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Bike Class</label>
+                    <input type="text" name="bike_class" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Bike Class" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Daily Deposit</label>
+                    <input type="number" name="daily_deposit" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Daily Deposit" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Monthly Deposit</label>
+                    <input type="number" name="monthly_deposit" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Monthly Deposit" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Daily Rental</label>
+                    <input type="number" name="daily_rental" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Daily Rental" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Weekly Rental</label>
+                    <input type="number" name="weekly_rental" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Weekly Rental" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Status</label>
+                    <input type="text" name="status" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Status">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Remarks</label>
+                    <textarea rows="2" name="remarks" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Photo</label>
+                    <input type="file" name="photo" class="w-full p-3 border border-gray-300 rounded-md" accept="image/*">
+                </div>
+                <div class="sm:col-span-2">
+                    <button type="submit" class="w-full p-4 text-white bg-gray-600 rounded-lg hover:bg-gray-700">Add Bike</button>
+                </div>
+            </form>
+        </div>
     </div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    {% for bike in bike_inventory %}
+    <div class="bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+        <a href="#">
+            {% if bike.photo %}
+                <img class="rounded-t-lg w-full h-48 object-cover" src="{{ bike.photo.url }}" alt="{{ bike.vehicle }}" />
+            {% else %}
+                <img class="rounded-t-lg w-full h-48 object-cover" src="/path/to/default-image.jpg" alt="No photo available" />
+                {% endif %}
+        </a>
+        <div class="p-5">
+            <a href="#">
+                <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ bike.vehicle }}</h5>
+            </a>
+            <p class="text-white dark:text-gray-400 mb-1"><strong>Brand:</strong> {{ bike.brand }}</p>
+            <p class="text-white dark:text-gray-400 mb-1"><strong>License Plate:</strong> {{ bike.license_plate }}</p>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-4">No bikes found in inventory.</div>
+    {% endfor %}
 </div>
+
+
+</div>
+
+<script>
+    const HOME_URL = "{% url 'bike' %}";
+
+    document.addEventListener('DOMContentLoaded', function() {
+        async function submitBikeForm(event) {
+            event.preventDefault(); // Prevent the default form submission
+            const form = document.getElementById('addbike');
+            const errorMessage = document.getElementById('errorMessage'); // Ensure this element exists
+            errorMessage.style.display = 'none'; // Hide error message initially
+
+            // Create a FormData object to handle file uploads
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/inventory/bike/', {
+                    method: 'POST',
+                    body: formData, // Send FormData directly
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken') // Include CSRF token
+                    }
+                });
+
+                // Check if the response is successful
+                if (response.ok) {
+                    const data = await response.json(); // Parse JSON response
+                    alert('Bike created successfully!'); // Alert success message
+                    window.location.href = HOME_URL; // Redirect to home page
+                } else {
+                    // Handle error response
+                    const errorData = await response.json();
+                    errorMessage.textContent = errorData.error || 'An error occurred. Please try again.';
+                    errorMessage.style.display = 'block'; // Show the error message
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.textContent = 'An unexpected error occurred. Please try again.';
+                errorMessage.style.display = 'block'; // Show the error message
+            }
+        }
+
+        // Function to get the CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Attach event listener to the form
+        document.getElementById('addbike').onsubmit = submitBikeForm;
+
+        // Show the Add Bike form when the button is clicked
+        document.getElementById('addBikeBtn').onclick = function() {
+            const form = document.getElementById('addBikeForm');
+            form.classList.toggle('hidden'); // Toggle the visibility of the form
+        };
+    });
+</script>
+
 {% endblock %}
