@@ -7,8 +7,9 @@ from drf_yasg import openapi
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import render
 from django.http import JsonResponse
+from django.core.paginator import Paginator
+from django.contrib.auth.models import User
 
 class HomeView(APIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
@@ -38,13 +39,18 @@ class MemberView(APIView):
 
             id = request.query_params.get('id')
 
-            queryset = Member.objects.all()
+            queryset = Member.objects.all().order_by('id')
             if id:
                 queryset = queryset.filter(id=id)
             
             if request.accepted_renderer.format == 'html':
-                return Response({"Members":queryset},template_name=self.template_name)
-
+                paginator = Paginator(queryset, 10)  # Limit of 6 items per page
+                page_number = request.query_params.get('page', 1)
+                page_obj = paginator.get_page(page_number)
+                return Response({
+                    'Members': page_obj,
+                }, template_name=self.template_name)
+            
             serializer = MemberSerializer(queryset, many=True)
             return Response(serializer.data)
         
@@ -95,5 +101,37 @@ class MemberView(APIView):
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('id', openapi.IN_QUERY, description="ID of the member to delete", type=openapi.TYPE_INTEGER),
+        ],
+        responses={
+            200: openapi.Response(description="Member deleted successfully"),
+            400: openapi.Response(description="ID must be provided"),
+            404: openapi.Response(description="Member not found"),
+            500: openapi.Response(description="Internal server error"),
+        }
+    )
+    def delete(self, request, *args, **kwargs):
+        try:
+            id = request.query_params.get('id')
+
+            if not id:
+                return Response({"error": "ID must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+            member = Member.objects.filter(id=id).first()
+            if not member:
+                return Response({"error": "Member not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            member.delete()
+
+            return Response( status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 

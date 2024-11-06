@@ -10,6 +10,9 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.http import JsonResponse
+from django.core.paginator import Paginator
+import cloudinary
+import cloudinary.uploader
 
 class BikeInventoryVew(APIView):
     permission_classes = [IsAuthenticated]
@@ -39,10 +42,16 @@ class BikeInventoryVew(APIView):
             if bike_class:
                 filter_criteria['bike_class'] = bike_class
                 
-            queryset = BikeInventory.objects.filter(**filter_criteria) if filter_criteria else BikeInventory.objects.all()
+            queryset = BikeInventory.objects.filter(**filter_criteria) if filter_criteria else BikeInventory.objects.all().order_by('id')
 
             if request.accepted_renderer.format == 'html':
-                return Response({'bike_inventory': queryset},template_name=self.template_name)
+                paginator = Paginator(queryset, 6)  # Limit of 6 items per page
+                page_number = request.query_params.get('page', 1)
+                page_obj = paginator.get_page(page_number)
+
+                return Response({
+                    'bike_inventory': page_obj,
+                }, template_name=self.template_name)
 
             serializer = BikeInventoryLimitedSerializer(queryset, many=True)
             return Response(serializer.data)
@@ -82,10 +91,10 @@ class BikeInventoryVew(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         except Exception as e:
+            print(e)
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
 
 class RentalLogView(APIView):
     permission_classes = [IsAuthenticated]
@@ -109,7 +118,7 @@ class RentalLogView(APIView):
             bike_id = request.query_params.get('id')
             historical = request.query_params.get('historical')
 
-            queryset = RentalLog.objects.all()
+            queryset = RentalLog.objects.all().order_by('id')
             if bike_id:
                 queryset = queryset.filter(id=bike_id)
             if historical:
@@ -132,10 +141,24 @@ class RentalLogView(APIView):
             ]
             members = Member.objects.all()
             vehicles = BikeInventory.objects.all()
+            addons = Addon.objects.all()
 
             if request.accepted_renderer.format == 'html':
-                return Response({'rental_logs': queryset,'members': members,'vehicles': vehicles}, template_name='inventory/rental_log.html')
-            
+                paginator = Paginator(queryset, 6)  # Limit of 6 items per page
+                page_number = request.query_params.get('page', 1)
+                page_obj = paginator.get_page(page_number)
+
+                members = Member.objects.all()
+                vehicles = BikeInventory.objects.all()
+                addons = Addon.objects.all()
+
+                return Response({
+                    'rental_logs': page_obj,
+                    'members': members,
+                    'vehicles': vehicles,
+                    'addons': addons
+                }, template_name='inventory/rental_log.html')
+
             return Response(records)
         
         except Exception as e:
@@ -171,8 +194,6 @@ class RentalLogView(APIView):
         """
         try:
             data = request.data
-            # if not data['paid']:
-            #     data['paid'] = False
             paid = data.get('paid', False)
             rental_days = int(data['rental_days']) 
             vehicle_id = data['vehicle']
@@ -228,7 +249,45 @@ class RentalLogView(APIView):
                             status=status.HTTP_200_OK,
                         )
                 return Response(response_data, status=status.HTTP_201_CREATED)
+            print(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('id', openapi.IN_QUERY, description="ID of the rental-log to delete", type=openapi.TYPE_INTEGER),
+        ],
+        responses={
+            200: openapi.Response(description="Rental-log deleted successfully"),
+            400: openapi.Response(description="ID must be provided"),
+            404: openapi.Response(description="Rental-log not found"),
+            500: openapi.Response(description="Internal server error"),
+        }
+    )
+    def delete(self, request, *args, **kwargs):
+        try:
+            rental_log_id = request.query_params.get('id')
+
+            if rental_log_id is None:
+                return Response({"error": "ID must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Convert the ID to an integer
+            try:
+                rental_log_id = int(rental_log_id)
+            except ValueError:
+                return Response({"error": "ID must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
+
+            rental_log = RentalLog.objects.filter(id=rental_log_id).first()
+            if rental_log is None:
+                return Response({"error": "Rental-log not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            rental_log.delete()
+
+            return Response({"success": "Rental-log deleted successfully"}, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response(

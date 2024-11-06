@@ -47,8 +47,14 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Class Passed</label>
-                    <input type="text" name="class_passed" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Class Passed" required>
+                    <select name="class_passed" class="w-full p-3 border border-gray-300 rounded-md" required>
+                        <option value="">Select Class</option>
+                        <option value="2">2</option>
+                        <option value="2A">2A</option>
+                        <option value="2B">2B</option>
+                    </select>
                 </div>
+                
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Issue Date</label>
                     <input type="date" name="issue_date" class="w-full p-3 border border-gray-300 rounded-md" required>
@@ -68,7 +74,7 @@
         </div>
     </div>
 
-    <div class="overflow-x-auto">
+    <div id="memberTable" class="overflow-x-auto">
         <table class="min-w-full bg-white border border-gray-200">
             <thead>
                 <tr class="bg-gray-100 border-b">
@@ -94,7 +100,12 @@
                     <td class="py-2 px-4 border-r">{{ member.class_passed }}</td>
                     <td class="py-2 px-4 border-r">{{ member.address }}</td>
                     <td class="py-2 px-4 border-r">{{ member.issue_date }}</td>
-                    <td class="py-2 px-4">{{ member.remarks }}</td>
+                    <td class="py-2 px-4 border-r">{{ member.remarks }}</td>
+                    <td class="py-2 px-4">
+                        <button class="delete-btn p-2 bg-red text-black rounded-lg hover:bg-red" data-id="{{ member.id }}">
+                            <i class="fas fa-trash text-red-500"></i> <!-- Font Awesome delete icon -->
+                        </button>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
@@ -104,6 +115,26 @@
             </tbody>
         </table>
     </div>
+        <!-- Pagination Controls -->
+        <div class="flex justify-between items-center mt-4">
+            {% if Members.has_previous %}
+                <a href="?page={{ Members.previous_page_number }}" class="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                    Previous
+                </a>
+            {% else %}
+                <span class="p-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">Previous</span>
+            {% endif %}
+    
+            <span>Page {{ Members.number }} of {{ Members.paginator.num_pages }}</span>
+    
+            {% if Members.has_next %}
+                <a href="?page={{ Members.next_page_number }}" class="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                    Next
+                </a>
+            {% else %}
+                <span class="p-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">Next</span>
+            {% endif %}
+        </div>
 </div>
 {% comment %} <script>
     async function submitMemberForm(event) {
@@ -139,7 +170,6 @@
 
             if (response.ok) {
                 // Successful member creation
-                alert(data.message || 'Member created successfully!');
                 location.reload();
 
                 // Optionally refresh the member list or redirect
@@ -155,6 +185,14 @@
             errorMessage.style.display = 'block';
         }
     }
+
+    // Toggle form and table visibility
+    document.getElementById('addMemberBtn').addEventListener('click', function() {
+        const form = document.getElementById('addMemberForm');
+        const table = document.getElementById('memberTable');
+        form.classList.toggle('hidden');
+        table.classList.toggle('hidden');
+    });
 
     document.getElementById('addmember').addEventListener('submit', submitMemberForm);
 
@@ -209,7 +247,6 @@
 
             if (response.ok) {
                 // Successful member creation
-                alert(data.message || 'Member created successfully!');
                 location.reload();
             } else {
                 // Handle error response
@@ -222,14 +259,50 @@
             errorMessage.style.display = 'block';
         }
     }
+    
 
-    // Add event listener to the "Add Member" button
-    document.getElementById('addMemberBtn').addEventListener('click', function() {
-        const form = document.getElementById('addMemberForm');
-        form.classList.toggle('hidden'); // Toggle the 'hidden' class
+    // Attach event listener to the form
+    document.getElementById('addmember').addEventListener('submit', submitMemberForm);
+
+    async function deleteMember(memberId) {
+        try {
+            const response = await fetch(`/member/?id=${memberId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken') // Add CSRF token
+                }
+            });
+
+            if (response.ok) {
+                // Successfully deleted the member
+                location.reload(); // Refresh the member list
+            } else {
+                const data = await response.json();
+                alert(data.error || 'An error occurred while deleting the member.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An unexpected error occurred. Please try again.');
+        }
+    }
+
+    // Attach event listeners to delete buttons
+    document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const memberId = this.getAttribute('data-id');
+            if (confirm('Are you sure you want to delete this member?')) {
+                deleteMember(memberId);
+            }
+        });
     });
 
-    document.getElementById('addmember').addEventListener('submit', submitMemberForm);
+
+    document.getElementById('addMemberBtn').addEventListener('click', function() {
+            const form = document.getElementById('addMemberForm');
+            const table = document.getElementById('memberTable');
+            form.classList.toggle('hidden');
+            table.classList.toggle('hidden');
+        });
 
     // Function to get CSRF token
     function getCookie(name) {

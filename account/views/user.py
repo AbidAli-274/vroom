@@ -1,5 +1,4 @@
 from urllib.request import Request
-from account.models import Member
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 from account.serializers import  UserSerializer
@@ -15,6 +14,9 @@ from django.contrib.auth import login, logout
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import IsAuthenticated
 from django.http import JsonResponse
+from django.views.decorators.cache import never_cache
+from django.utils.decorators import method_decorator
+
 class SignupView(APIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'account/signup.html'
@@ -166,11 +168,14 @@ class UserLogin(APIView):
 class UserLogout(APIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'account/login.html'
+
+    @method_decorator(never_cache)
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
         logout(request)
         return Response(template_name=self.template_name)
     
+    @method_decorator(never_cache)
     @swagger_auto_schema(tags=["Authentication"])
     @csrf_exempt
     def post(self, request: Request) -> Response:

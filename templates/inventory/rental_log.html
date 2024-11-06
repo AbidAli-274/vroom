@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
 <div class="container mx-auto mt-8">
     <!-- Search Input -->
     <div class="flex justify-between mb-4">
@@ -56,38 +57,28 @@
                     <label class="block text-sm font-medium text-gray-700">Rental Days</label>
                     <input type="number" name="rental_days" class="w-full p-3 border border-gray-300 rounded-md" required>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Rental Price</label>
-                    <input type="number" name="rental_price" class="w-full p-3 border border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Deposit</label>
-                    <input type="number" name="price_deposit" class="w-full p-3 border border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Addon Deposit</label>
-                    <input type="number" name="price_deposit_addon" class="w-full p-3 border border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Paid</label>
-                    <select name="paid" class="w-full p-3 border border-gray-300 rounded-md">
-                        <option value="false">No</option>
-                        <option value="true">Yes</option>
-                    </select>
-                </div>
                 <div >
                     <label class="block text-sm font-medium text-gray-700">Remarks</label>
                     <textarea rows="1" name="remarks" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks"></textarea>
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Addons</label>
+                    <select name="addon" class="w-full p-3 border border-gray-300 rounded-md" multiple >
+                        {% for addon in addons %}
+                        <option value="{{ addon.id }}">{{ addon.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
                 <div class="sm:col-span-2">
-                    <button type="submit" class="w-full p-4 text-white bg-gray-600 rounded-lg hover:bg-gray-700">Create Rental Log</button>
+                    <button type="submit" class="w-full p-4 text-white bg-gray-600 rounded-lg border border-gray-300 rounded-md  hover:bg-gray-700">Create Rental Log</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Table -->
-    <div class="overflow-x-auto">
+    <div id="rentalTable" class="overflow-x-auto">
         <table class="min-w-full bg-white border border-gray-200">
             <thead>
                 <tr class="bg-gray-100 border-b">
@@ -100,7 +91,6 @@
                     <th class="py-3 px-4 text-left border-r border-gray-200">Deposit</th>
                     <th class="py-3 px-4 text-left border-r border-gray-200">Addon Deposit</th>
                     <th class="py-3 px-4 text-left border-r border-gray-200">Paid</th>
-                    <th class="py-3 px-4 text-left border-r border-gray-200">Remarks</th>
                 </tr>
             </thead>
             <tbody>
@@ -114,14 +104,19 @@
                     <td class="py-3 px-4 border-r">{{ log.rental_price }}</td>
                     <td class="py-3 px-4 border-r">{{ log.price_deposit }}</td>
                     <td class="py-3 px-4 border-r">{{ log.price_deposit_addon }}</td>
-                    <td class="py-3 px-4">
+                    <td class="py-3 px-4 border-r">
                         {% if log.paid %}
                             <span class="text-green-500 font-semibold">Yes</span>
                         {% else %}
                             <span class="text-red-500 font-semibold">No</span>
                         {% endif %}
                     </td>
-                    <td class="py-3 px-4">{{ log.remarks }}</td>
+                    <td class="py-2 px-4">
+                        <button class="delete-btn p-2 bg-red-600 text-black rounded-lg hover:bg-red-700 " data-id="{{ log.id }}">
+                            <i class="fas fa-trash text-red-500"></i> <!-- Font Awesome delete icon -->
+                        </button>
+                    </td>
+                    
                 </tr>
                 {% empty %}
                 <tr>
@@ -131,12 +126,37 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Pagination Controls -->
+    <div class="flex justify-between items-center mt-4">
+        {% if rental_logs.has_previous %}
+            <a href="?page={{ rental_logs.previous_page_number }}" class="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                Previous
+            </a>
+        {% else %}
+            <span class="p-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">Previous</span>
+        {% endif %}
+
+        <span>Page {{ rental_logs.number }} of {{ rental_logs.paginator.num_pages }}</span>
+
+        {% if rental_logs.has_next %}
+            <a href="?page={{ rental_logs.next_page_number }}" class="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                Next
+            </a>
+        {% else %}
+            <span class="p-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">Next</span>
+        {% endif %}
+    </div>
+
+
 </div>
 
 <script>
     // Toggle the visibility of the Add Rental Log form
     document.getElementById('addRentalLogBtn').addEventListener('click', function () {
         const form = document.getElementById('addRentalLogForm');
+        const table = document.getElementById('rentalTable');
+        table.classList.toggle('hidden');
         form.classList.toggle('hidden');
     });
 
@@ -145,6 +165,7 @@
         const form = event.target;
         const errorMessage = document.getElementById('errorMessage');
         errorMessage.style.display = 'none'; // Hide previous error message
+        const addons = Array.from(form.addon.selectedOptions).map(option => option.value);
 
         const rentalLogData = {
             member: form.member.value,
@@ -152,10 +173,7 @@
             start_datetime: form.start_datetime.value,
             end_datetime: form.end_datetime.value,
             rental_days: form.rental_days.value,
-            rental_price: form.rental_price.value,
-            price_deposit: form.price_deposit.value || null,
-            price_deposit_addon: form.price_deposit_addon.value || null,
-            paid: form.paid.value === 'true',
+            addons:addons,
             remarks: form.remarks.value || '',
         };
 
@@ -182,6 +200,58 @@
     }
 
     document.getElementById('addRentalLog').addEventListener('submit', submitRentalLogForm);
+
+    
+    async function deleteRentalLog(rental_logId) {
+    try {
+        const response = await fetch(`/inventory/rental-log/?id=${rental_logId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken') // Add CSRF token
+            }
+        });
+
+        if (response.ok) {
+            // Successfully deleted the rental log
+            location.reload(); // Refresh the list
+        } else {
+            const data = await response.json();
+            alert(data.error || 'An error occurred while deleting the rental log.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An unexpected error occurred. Please try again.');
+    }
+}
+
+// Attach event listeners to delete buttons
+document.querySelectorAll('.delete-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const rental_logId = this.getAttribute('data-id');
+        if (confirm('Are you sure you want to delete this rental log?')) {
+            deleteRentalLog(rental_logId);
+        }
+    });
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Check if this cookie string begins with the name we want
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
+
 </script>
 
 {% endblock %}

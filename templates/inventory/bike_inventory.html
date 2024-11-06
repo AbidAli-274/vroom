@@ -66,7 +66,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Remarks</label>
-                    <textarea rows="2" name="remarks" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks"></textarea>
+                    <textarea rows="1" name="remarks" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks"></textarea>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Photo</label>
@@ -79,7 +79,7 @@
         </div>
     </div>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+<div id="bikeInventory"  class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
     {% for bike in bike_inventory %}
     <div class="bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
         <a href="#">
@@ -100,8 +100,31 @@
     {% empty %}
     <div class="text-center py-4">No bikes found in inventory.</div>
     {% endfor %}
+    
+
+
 </div>
 
+    <!-- Pagination Controls -->
+    <div class="flex justify-between items-center mt-4">
+        {% if bike_inventory.has_previous %}
+            <a href="?page={{ bike_inventory.previous_page_number }}" class="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                Previous
+            </a>
+        {% else %}
+            <span class="p-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">Previous</span>
+        {% endif %}
+
+        <span>Page {{ bike_inventory.number }} of {{ bike_inventory.paginator.num_pages }}</span>
+
+        {% if bike_inventory.has_next %}
+            <a href="?page={{ bike_inventory.next_page_number }}" class="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                Next
+            </a>
+        {% else %}
+            <span class="p-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">Next</span>
+        {% endif %}
+    </div>
 
 </div>
 
@@ -130,7 +153,6 @@
                 // Check if the response is successful
                 if (response.ok) {
                     const data = await response.json(); // Parse JSON response
-                    alert('Bike created successfully!'); // Alert success message
                     window.location.href = HOME_URL; // Redirect to home page
                 } else {
                     // Handle error response
@@ -164,11 +186,14 @@
         // Attach event listener to the form
         document.getElementById('addbike').onsubmit = submitBikeForm;
 
-        // Show the Add Bike form when the button is clicked
         document.getElementById('addBikeBtn').onclick = function() {
-            const form = document.getElementById('addBikeForm');
-            form.classList.toggle('hidden'); // Toggle the visibility of the form
-        };
+        const form = document.getElementById('addBikeForm');
+        const inventory = document.getElementById('bikeInventory');
+        
+        form.classList.toggle('hidden');      // Toggle form visibility
+        inventory.classList.toggle('hidden'); // Toggle inventory visibility
+    };
+
     });
 </script>
 
