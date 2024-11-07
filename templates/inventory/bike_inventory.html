@@ -12,7 +12,8 @@
             id="addBikeBtn" 
             class="ml-4 p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
         >
-            Add Bike
+        <i class="fas fa-plus text-white"></i>
+             Bike
         </button>
     </div>
     <h2 class="text-2xl font-semibold mb-4">Bike Inventory</h2>
@@ -79,30 +80,30 @@
         </div>
     </div>
 
-<div id="bikeInventory"  class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-    {% for bike in bike_inventory %}
-    <div class="bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-        <a href="#">
-            {% if bike.photo %}
-                <img class="rounded-t-lg w-full h-48 object-cover" src="{{ bike.photo.url }}" alt="{{ bike.vehicle }}" />
-            {% else %}
-                <img class="rounded-t-lg w-full h-48 object-cover" src="/path/to/default-image.jpg" alt="No photo available" />
+    <div id="bikeInventory" class="grid grid-flow-row gap-4 mx-auto" style="grid-template-columns: repeat(5, minmax(0, 1fr));">
+        {% for bike in bike_inventory %}
+        <div class="border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 h-full flex flex-col">
+            <span class="absolute top-2 right-2 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded">
+                {{ bike.status }}
+            </span>
+            <a href="#" class="h-full">
+                {% if bike.photo %}
+                    <img class="rounded-t-lg w-full h-full object-cover" src="{{ bike.photo }}" alt="{{ bike.vehicle }}" />
+                {% else %}
+                    <img class="rounded-t-lg w-full h-full object-cover" src="http://res.cloudinary.com/daj0lzvak/image/upload/v1730906546/img-no_xlktml.jpg" alt="No photo available" />
                 {% endif %}
-        </a>
-        <div class="p-5">
-            <a href="#">
-                <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{{ bike.vehicle }}</h5>
             </a>
-            <p class="text-white dark:text-gray-400 mb-1"><strong>Brand:</strong> {{ bike.brand }}</p>
-            <p class="text-white dark:text-gray-400 mb-1"><strong>License Plate:</strong> {{ bike.license_plate }}</p>
+            <div class="p-5 bg-white flex-grow">
+                <p class="text-black text-sm dark:text-gray-400 mb-1"><small>Vehicle:</small> {{ bike.vehicle }}</p>
+                <p class="text-black text-sm dark:text-gray-400 mb-1"><small>License Plate:</small> {{ bike.license_plate }}</p>
+            </div>
         </div>
+        {% empty %}
+        <div class="text-center py-4">No bikes found in inventory.</div>
+        {% endfor %}
     </div>
-    {% empty %}
-    <div class="text-center py-4">No bikes found in inventory.</div>
-    {% endfor %}
     
-
-
+    
 </div>
 
     <!-- Pagination Controls -->

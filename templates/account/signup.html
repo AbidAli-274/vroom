@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign Up</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body class="bg-gray-100 dark:bg-gray-900">
   <!-- Sign Up Form -->
@@ -28,13 +29,15 @@
       </form>
       <div class="mt-6 text-center text-gray-700 dark:text-white">
         Already have an account?
-        <a href="/login/" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Login</a>
+        <a href="/login/" class="block text-red-500 py-2 text-gray-700 hover:bg-gray-100"><i class="fas fa-sign-in-alt text-red-500 mr-3"></i>
+          Login</a>
       </div>
     </div>
   </div>
   <!-- JavaScript for handling form submission -->
   <script>
     async function submitSignupForm(event) {
+      const Login_URL = "{% url 'login' %}";
       event.preventDefault();
       const form = document.getElementById('signup');
       const errorMessage = document.getElementById('errorMessage');
@@ -62,13 +65,9 @@
           body: JSON.stringify({ first_name, last_name, email, password })
         });
         const data = await response.json();
-        console.log(data)
-        console.log("======")
-        console.log(response)
         if (response.ok) {
-          // Successful signup
-          alert(data.message + ` Username: ${data.username}`);
           form.reset();
+          window.location.href = Login_URL;
         } else {
           // Display errors
           errorMessage.textContent = data.error || Object.values(data).flat().join(', ');

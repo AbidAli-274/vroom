@@ -15,7 +15,6 @@ import cloudinary
 import cloudinary.uploader
 
 class BikeInventoryVew(APIView):
-    permission_classes = [IsAuthenticated]
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'inventory/bike_inventory.html'
 
@@ -45,7 +44,7 @@ class BikeInventoryVew(APIView):
             queryset = BikeInventory.objects.filter(**filter_criteria) if filter_criteria else BikeInventory.objects.all().order_by('id')
 
             if request.accepted_renderer.format == 'html':
-                paginator = Paginator(queryset, 6)  # Limit of 6 items per page
+                paginator = Paginator(queryset, 15)  # Limit of 6 items per page
                 page_number = request.query_params.get('page', 1)
                 page_obj = paginator.get_page(page_number)
 
@@ -73,6 +72,17 @@ class BikeInventoryVew(APIView):
     def post(self, request, *args, **kwargs):
         try:
             data = request.data
+            if data['photo']:
+                img=data['photo']
+                cloudinary.config(
+                    cloud_name = 'daj0lzvak',
+                    api_key = '222713357542916',
+                    api_secret = 'fyA1-yiKYPoL0ODKUWfqNse-D54',
+                )
+                cloudinary_img = cloudinary.uploader.upload(img,  use_filename = True)
+                cloudinary_img_url = cloudinary_img['url']
+                data['photo'] = cloudinary_img_url
+
             serializer = BikeInventorySerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
@@ -95,6 +105,42 @@ class BikeInventoryVew(APIView):
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+    
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('id', openapi.IN_QUERY, description="ID of the Bike to delete", type=openapi.TYPE_INTEGER),
+        ],
+        responses={
+            200: openapi.Response(description="Bike deleted successfully"),
+            400: openapi.Response(description="ID must be provided"),
+            404: openapi.Response(description="Bike not found"),
+            500: openapi.Response(description="Internal server error"),
+        }
+    )
+    def delete(self, request, *args, **kwargs):
+        try:
+            bike_id = request.query_params.get('id')
+
+            if bike_id is None:
+                return Response({"error": "ID must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                bike_id = int(bike_id)
+            except ValueError:
+                return Response({"error": "ID must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
+
+            bike = BikeInventory.objects.filter(id=bike_id).first()
+            if bike is None:
+                return Response({"error": "Bike not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            bike.delete()
+
+            return Response({"success": "Bike deleted successfully"}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class RentalLogView(APIView):
     permission_classes = [IsAuthenticated]
@@ -104,7 +150,7 @@ class RentalLogView(APIView):
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter('id', openapi.IN_QUERY, description="ID of the bike to get all the rental dateTime", type=openapi.TYPE_INTEGER),
-            openapi.Parameter('historical', openapi.IN_QUERY, description="Whether to include past records or only records from now onwards (yes/no)", type=openapi.TYPE_STRING),
+            openapi.Parameter('historical', openapi.IN_QUERY, description="Whether to include past records or not. (yes/no)", type=openapi.TYPE_STRING),
         ],
         responses={
             200: openapi.Response(
@@ -339,6 +385,42 @@ class AddonView(APIView):
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('id', openapi.IN_QUERY, description="ID of the Addon to delete", type=openapi.TYPE_INTEGER),
+        ],
+        responses={
+            200: openapi.Response(description="Addon deleted successfully"),
+            400: openapi.Response(description="ID must be provided"),
+            404: openapi.Response(description="Addon not found"),
+            500: openapi.Response(description="Internal server error"),
+        }
+    )
+    def delete(self, request, *args, **kwargs):
+        try:
+            addon_id = request.query_params.get('id')
+
+            if addon_id is None:
+                return Response({"error": "ID must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                addon_id = int(addon_id)
+            except ValueError:
+                return Response({"error": "ID must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
+
+            addon = Addon.objects.filter(id=addon_id).first()
+            if addon is None:
+                return Response({"error": "Addon not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            addon.delete()
+
+            return Response({"success": "Addon deleted successfully"}, status=status.HTTP_200_OK)
+
         except Exception as e:
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR

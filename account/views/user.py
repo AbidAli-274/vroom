@@ -66,8 +66,17 @@ class SignupView(APIView):
                 serializer.save()
                 success_data = {'message': 'User created successfully', 'username': username}
                 if request.accepted_renderer.format == 'html':
-                    return Response(success_data, template_name=self.template_name, status=status.HTTP_201_CREATED)
+                    return JsonResponse(
+                        {
+                            "status": status.HTTP_200_OK,
+                            "message": "Signup success",
+                            "data":success_data,
+                        },
+                        status=status.HTTP_200_OK,
+                    )
+                    # return Response(success_data, template_name=self.template_name, status=status.HTTP_201_CREATED)
                 return Response(success_data, status=status.HTTP_201_CREATED)
+            print(serializer.errors)
             return Response(serializer.errors, template_name=self.template_name, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response(
@@ -179,7 +188,12 @@ class UserLogout(APIView):
     @swagger_auto_schema(tags=["Authentication"])
     @csrf_exempt
     def post(self, request: Request) -> Response:
-        logout(request)
-        return Response(
-            {"success": True, "message": "Logged out"}, status=status.HTTP_200_OK
-        )
+        try:
+            logout(request)
+            return Response(
+                {"success": True, "message": "Logged out"}, status=status.HTTP_200_OK
+            )
+        except Exception as e:
+                return Response(
+                    {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
