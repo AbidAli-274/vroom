@@ -44,7 +44,7 @@ class BikeInventoryVew(APIView):
             queryset = BikeInventory.objects.filter(**filter_criteria) if filter_criteria else BikeInventory.objects.all().order_by('id')
 
             if request.accepted_renderer.format == 'html':
-                paginator = Paginator(queryset, 15)  # Limit of 6 items per page
+                paginator = Paginator(queryset, 12)  # Limit of 6 items per page
                 page_number = request.query_params.get('page', 1)
                 page_obj = paginator.get_page(page_number)
 
@@ -106,6 +106,73 @@ class BikeInventoryVew(APIView):
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
+    @swagger_auto_schema(
+        request_body=BikeInventorySerializer,
+        manual_parameters=[
+            openapi.Parameter('id', openapi.IN_QUERY, description="ID of the bike to update", type=openapi.TYPE_INTEGER),
+        ],
+        responses={
+            200: openapi.Response(
+                description="Bike updated successfully",
+                schema=BikeInventorySerializer()
+            ),
+            400: openapi.Response(description="Invalid data or ID not provided"),
+            404: openapi.Response(description="Bike not found"),
+            500: openapi.Response(description="Internal server error"),
+        }
+    )
+    def put(self, request, *args, **kwargs):
+        try:
+            bike_id = request.query_params.get('id')
+            if not bike_id:
+                return Response({"error": "ID must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                bike_id = int(bike_id)
+            except ValueError:
+                return Response({"error": "ID must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
+
+            bike = BikeInventory.objects.filter(id=bike_id).first()
+            if not bike:
+                return Response({"error": "Bike not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            data = request.data
+            update_data = {}
+
+            # Check each field to see if it's different from the existing value
+            for field, value in data.items():
+                if field == 'photo' and value:
+                    # Delete the old photo if it exists
+                    if bike.photo:
+                        cloudinary.config(
+                            cloud_name='daj0lzvak',
+                            api_key='222713357542916',
+                            api_secret='fyA1-yiKYPoL0ODKUWfqNse-D54',
+                        )
+                        # Extract public ID from the URL to delete the resource on Cloudinary
+                        public_id = bike.photo.split('/')[-1].split('.')[0]
+                        cloudinary.uploader.destroy(public_id)
+
+                    # Upload the new photo to Cloudinary
+                    cloudinary_img = cloudinary.uploader.upload(value, use_filename=True)
+                    update_data['photo'] = cloudinary_img['url']
+                elif field != 'photo' and hasattr(bike, field) and getattr(bike, field) != value:
+                    update_data[field] = value
+
+            if update_data:
+                serializer = BikeInventorySerializer(bike, data=update_data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({"message": "Bike updated successfully", "data": serializer.data}, status=status.HTTP_200_OK)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"message": "No changes detected."}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter('id', openapi.IN_QUERY, description="ID of the Bike to delete", type=openapi.TYPE_INTEGER),
