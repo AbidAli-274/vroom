@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900">
+  <div id="loginForm" class="flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-md p-6 bg-white rounded-sm shadow-lg border dark:bg-gray-800">
+      <h2 class="mb-6 text-2xl font-bold text-center text-gray-900 dark:text-white">Login</h2>
+      <form id="login" class="space-y-4" onsubmit="submitLoginForm(event)">
+        {% csrf_token %}
+        <label for="email_or_username" class="block text-sm font-medium text-gray-700 dark:text-white">Email or Username</label>
+        <input type="text" id="email_or_username" name="email_or_username" class="w-full p-3 border border-gray-300 rounded-md dark:bg-gray-600 dark:border-gray-500" placeholder="Enter your email" required>
+        
+        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-white">Password</label>
+        <input type="password" id="password" name="password" class="w-full p-3 border border-gray-300 rounded-md dark:bg-gray-600 dark:border-gray-500" placeholder="Enter your password" required>
+        
+        <button type="submit" class="w-full p-4 text-white bg-gray-600 rounded-lg hover:bg-gray-700">Login</button>
+        <p id="errorMessage" class="text-red-500 text-sm mt-4" style="display: none;"></p>
+      </form>
+      <div class="mt-6 text-center text-gray-700 dark:text-white">
+        Create a new account
+        <a href="/signup/" class="block text-red-500 px-4 py-2 text-gray-700 hover:bg-gray-100"><i class="fas fa-user-plus text-red-500 mr-3"></i>
+          signup</a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- JavaScript for handling form submission -->
+  <script>
+    const HOME_URL = "{% url 'home' %}";
+    async function submitLoginForm(event) {
+      event.preventDefault();
+      const form = document.getElementById('login');
+      const errorMessage = document.getElementById('errorMessage');
+      errorMessage.style.display = 'none';
+    
+      const email_or_username = form.email_or_username.value.trim();
+      const password = form.password.value;
+    
+      try {
+        const response = await fetch('/login/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ email_or_username, password })
+        });
+        const data = await response.json();
+    
+        if (response.ok) {
+          form.reset();
+          // Optionally, redirect after successful login
+          window.location.href = HOME_URL;
+        } else {
+          errorMessage.textContent = data.error || 'An error occurred. Please try again.';
+          errorMessage.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        errorMessage.textContent = 'An error occurred. Please try again later.';
+        errorMessage.style.display = 'block';
+      }
+    }
+    
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+  </script>
+</body>
+</html>

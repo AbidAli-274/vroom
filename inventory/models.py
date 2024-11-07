@@ -1,11 +1,9 @@
 from django.db import models
 from account.models import Member
-from cloudinary.models import CloudinaryField
-
 
 class BikeInventory(models.Model):
     vehicle = models.CharField(max_length=100)
-    photo = CloudinaryField('image', blank=True, null=True)
+    photo = models.CharField(max_length=200, blank=True, null=True)
     brand = models.CharField(max_length=100)
     color_edition = models.CharField(max_length=100, blank=True, null=True)
     license_plate = models.CharField(max_length=20, unique=True)

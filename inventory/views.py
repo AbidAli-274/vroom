@@ -1,4 +1,5 @@
 from django.utils import timezone
+from account.models import Member
 from inventory.models import BikeInventory,RentalLog,Addon
 from inventory.serializers import BikeInventoryLimitedSerializer, BikeInventorySerializer,AddonSerializer,RentalLogSerializer
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
@@ -7,10 +8,15 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.views import APIView
 from rest_framework import status
-
+from rest_framework.permissions import IsAuthenticated
+from django.http import JsonResponse
+from django.core.paginator import Paginator
+import cloudinary
+import cloudinary.uploader
 
 class BikeInventoryVew(APIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'inventory/bike_inventory.html'
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -35,10 +41,16 @@ class BikeInventoryVew(APIView):
             if bike_class:
                 filter_criteria['bike_class'] = bike_class
                 
-            queryset = BikeInventory.objects.filter(**filter_criteria) if filter_criteria else BikeInventory.objects.all()
+            queryset = BikeInventory.objects.filter(**filter_criteria) if filter_criteria else BikeInventory.objects.all().order_by('id')
 
             if request.accepted_renderer.format == 'html':
-                return Response({'bike_inventory': queryset}, template_name='inventory/bike_inventory.html')
+                paginator = Paginator(queryset, 15)  # Limit of 6 items per page
+                page_number = request.query_params.get('page', 1)
+                page_obj = paginator.get_page(page_number)
+
+                return Response({
+                    'bike_inventory': page_obj,
+                }, template_name=self.template_name)
 
             serializer = BikeInventoryLimitedSerializer(queryset, many=True)
             return Response(serializer.data)
@@ -60,25 +72,85 @@ class BikeInventoryVew(APIView):
     def post(self, request, *args, **kwargs):
         try:
             data = request.data
+            if data['photo']:
+                img=data['photo']
+                cloudinary.config(
+                    cloud_name = 'daj0lzvak',
+                    api_key = '222713357542916',
+                    api_secret = 'fyA1-yiKYPoL0ODKUWfqNse-D54',
+                )
+                cloudinary_img = cloudinary.uploader.upload(img,  use_filename = True)
+                cloudinary_img_url = cloudinary_img['url']
+                data['photo'] = cloudinary_img_url
+
             serializer = BikeInventorySerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
+                if request.accepted_renderer.format == 'html':
+                    return JsonResponse(
+                        {
+                            "status": status.HTTP_200_OK,
+                            "message": "Bike added successfully!",
+                            "data": {
+                                'bike': serializer.data
+                            },
+                        },
+                        status=status.HTTP_200_OK,
+                    )
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
+        except Exception as e:
+            print(e)
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('id', openapi.IN_QUERY, description="ID of the Bike to delete", type=openapi.TYPE_INTEGER),
+        ],
+        responses={
+            200: openapi.Response(description="Bike deleted successfully"),
+            400: openapi.Response(description="ID must be provided"),
+            404: openapi.Response(description="Bike not found"),
+            500: openapi.Response(description="Internal server error"),
+        }
+    )
+    def delete(self, request, *args, **kwargs):
+        try:
+            bike_id = request.query_params.get('id')
+
+            if bike_id is None:
+                return Response({"error": "ID must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                bike_id = int(bike_id)
+            except ValueError:
+                return Response({"error": "ID must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
+
+            bike = BikeInventory.objects.filter(id=bike_id).first()
+            if bike is None:
+                return Response({"error": "Bike not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            bike.delete()
+
+            return Response({"success": "Bike deleted successfully"}, status=status.HTTP_200_OK)
+
         except Exception as e:
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
 class RentalLogView(APIView):
+    permission_classes = [IsAuthenticated]
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'inventory/rental_log.html'
 
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter('id', openapi.IN_QUERY, description="ID of the bike to get all the rental dateTime", type=openapi.TYPE_INTEGER),
-            openapi.Parameter('historical', openapi.IN_QUERY, description="Whether to include past records or only records from now onwards (yes/no)", type=openapi.TYPE_STRING),
+            openapi.Parameter('historical', openapi.IN_QUERY, description="Whether to include past records or not. (yes/no)", type=openapi.TYPE_STRING),
         ],
         responses={
             200: openapi.Response(
@@ -92,9 +164,9 @@ class RentalLogView(APIView):
             bike_id = request.query_params.get('id')
             historical = request.query_params.get('historical')
 
-            queryset = RentalLog.objects.all()
+            queryset = RentalLog.objects.all().order_by('id')
             if bike_id:
-                queryset = queryset.filter(vehicle__id=bike_id)
+                queryset = queryset.filter(id=bike_id)
             if historical:
                 if historical.lower() == 'no':
                     queryset = queryset.filter(start_datetime__gte=timezone.now())
@@ -113,9 +185,25 @@ class RentalLogView(APIView):
                 }
                 for rental in queryset
             ]
+            members = Member.objects.all()
+            vehicles = BikeInventory.objects.all()
+            addons = Addon.objects.all()
 
             if request.accepted_renderer.format == 'html':
-                return Response({'rental_logs': queryset}, template_name='inventory/rental_log.html')
+                paginator = Paginator(queryset, 6)  # Limit of 6 items per page
+                page_number = request.query_params.get('page', 1)
+                page_obj = paginator.get_page(page_number)
+
+                members = Member.objects.all()
+                vehicles = BikeInventory.objects.all()
+                addons = Addon.objects.all()
+
+                return Response({
+                    'rental_logs': page_obj,
+                    'members': members,
+                    'vehicles': vehicles,
+                    'addons': addons
+                }, template_name='inventory/rental_log.html')
 
             return Response(records)
         
@@ -124,6 +212,7 @@ class RentalLogView(APIView):
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+ 
     @swagger_auto_schema(
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
@@ -151,20 +240,108 @@ class RentalLogView(APIView):
         """
         try:
             data = request.data
-            data['paid'] = False
+            paid = data.get('paid', False)
+            rental_days = int(data['rental_days']) 
+            vehicle_id = data['vehicle']
+            vehicle = BikeInventory.objects.get(id=vehicle_id)
+
+            daily_rental = vehicle.daily_rental or 0
+            weekly_rental = vehicle.weekly_rental or 0
+            monthly_deposit = vehicle.monthly_deposit or 0
+            daily_deposit = vehicle.daily_deposit or 0
+
+            if rental_days < 3:
+                rental_price = (daily_rental * rental_days) + 30
+            elif 3 <= rental_days <= 6:
+                rental_price = daily_rental * rental_days
+            elif rental_days == 7:
+                rental_price = weekly_rental
+            else:
+                complete_weeks = rental_days // 7
+                leftover_days = rental_days % 7
+                rental_price = (weekly_rental * complete_weeks) + (daily_rental * leftover_days)
+
+            if rental_days >= 30:
+                price_deposit = rental_price + monthly_deposit
+            else:
+                price_deposit = rental_price + daily_deposit
+
+            addon_price = sum(Addon.objects.filter(id__in=data.get('addons', [])).values_list('rate', flat=True))
+            price_deposit_addon = price_deposit + addon_price
+
+            data['rental_price'] = rental_price
+            data['price_deposit'] = price_deposit
+            data['price_deposit_addon'] = price_deposit_addon
+            data['paid']=paid
+
             serializer = RentalLogSerializer(data=data)
             if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                rental_log = serializer.save()
+                response_data = {
+                    "id": rental_log.id,  # Assuming the primary key of RentalLog is 'id'
+                    "dailyDeposit": daily_deposit,
+                    "monthlyDeposit": monthly_deposit,
+                    "addonPrice": addon_price,
+                    "rentalPrice": rental_price,
+                    "totalPrice": price_deposit_addon  # This should reflect the price deposit addon
+                }
+                if request.accepted_renderer.format == 'html':
+                    return JsonResponse(
+                            {
+                                "status": status.HTTP_200_OK,
+                                "message": "Rental-log added successfully!",
+
+                            },
+                            status=status.HTTP_200_OK,
+                        )
+                return Response(response_data, status=status.HTTP_201_CREATED)
+            print(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+
         except Exception as e:
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-            
-            
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('id', openapi.IN_QUERY, description="ID of the rental-log to delete", type=openapi.TYPE_INTEGER),
+        ],
+        responses={
+            200: openapi.Response(description="Rental-log deleted successfully"),
+            400: openapi.Response(description="ID must be provided"),
+            404: openapi.Response(description="Rental-log not found"),
+            500: openapi.Response(description="Internal server error"),
+        }
+    )
+    def delete(self, request, *args, **kwargs):
+        try:
+            rental_log_id = request.query_params.get('id')
+
+            if rental_log_id is None:
+                return Response({"error": "ID must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Convert the ID to an integer
+            try:
+                rental_log_id = int(rental_log_id)
+            except ValueError:
+                return Response({"error": "ID must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
+
+            rental_log = RentalLog.objects.filter(id=rental_log_id).first()
+            if rental_log is None:
+                return Response({"error": "Rental-log not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            rental_log.delete()
+
+            return Response({"success": "Rental-log deleted successfully"}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 class AddonView(APIView):
+    permission_classes = [IsAuthenticated]
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
 
     @swagger_auto_schema(
@@ -208,6 +385,42 @@ class AddonView(APIView):
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('id', openapi.IN_QUERY, description="ID of the Addon to delete", type=openapi.TYPE_INTEGER),
+        ],
+        responses={
+            200: openapi.Response(description="Addon deleted successfully"),
+            400: openapi.Response(description="ID must be provided"),
+            404: openapi.Response(description="Addon not found"),
+            500: openapi.Response(description="Internal server error"),
+        }
+    )
+    def delete(self, request, *args, **kwargs):
+        try:
+            addon_id = request.query_params.get('id')
+
+            if addon_id is None:
+                return Response({"error": "ID must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                addon_id = int(addon_id)
+            except ValueError:
+                return Response({"error": "ID must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
+
+            addon = Addon.objects.filter(id=addon_id).first()
+            if addon is None:
+                return Response({"error": "Addon not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            addon.delete()
+
+            return Response({"success": "Addon deleted successfully"}, status=status.HTTP_200_OK)
+
         except Exception as e:
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR

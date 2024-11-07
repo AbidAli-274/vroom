@@ -1,21 +1,3 @@
-{% comment %} <div class="bg-white shadow-md p-4 flex items-center justify-between">
-    <div class="flex items-center space-x-4">
-        <button class="text-gray-500 hover:text-gray-700 focus:outline-none">
-            <svg class="h-6 w-6" fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor"><!-- icon SVG --></svg>
-        </button>
-    </div>
-    <div class="flex items-center space-x-4">
-        <button class="text-gray-500 hover:text-gray-700">
-            <svg class="h-6 w-6" fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor"><!-- icon SVG --></svg>
-        </button>
-        <div class="flex items-center space-x-2">
-            <span class="text-gray-700 font-medium">Name Surname</span>
-            <svg class="h-5 w-5 text-gray-500" fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor"><!-- icon SVG --></svg>
-        </div>
-    </div>
-</div> {% endcomment %}
-
-
 <div class="bg-white shadow-md p-4 flex items-center justify-between">
     <div class="flex items-center space-x-4">
         <button class="text-gray-500 hover:text-gray-700 focus:outline-none">
@@ -30,7 +12,7 @@
         <!-- Name Dropdown Toggle -->
         <div class="relative">
             <button onclick="toggleDropdown()" class="flex items-center space-x-2 text-gray-700 font-medium focus:outline-none">
-                <span>Name Surname</span>
+                <span>{{ user_name }}</span>
                 <!-- Arrow Down Icon -->
                 <svg class="h-5 w-5 text-gray-500" fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -39,8 +21,7 @@
             
             <!-- Dropdown Menu -->
             <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg">
-                <a href="/signup/" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Sign Up</a>
-                <a href="/signup/" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Sign Out</a>
+                <a href="/logout/" class="block px-4 py-2 text-red-500 hover:bg-gray-100"><i class="fas fa-sign-out-alt text-red-500 mr-3"></i>Logout</a>
             </div>
         </div>
     </div>
