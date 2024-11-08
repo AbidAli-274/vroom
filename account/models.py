@@ -8,7 +8,7 @@ class Member(models.Model):
     dob = models.DateField(blank=True, null=True)
     class_passed = models.CharField(max_length=50)
     address = models.TextField(blank=True, null=True)
-    issue_date = models.DateField()
+    issue_date = models.DateField(blank=True, null=True)
     remarks = models.TextField(blank=True, null=True)
     
     def __str__(self):

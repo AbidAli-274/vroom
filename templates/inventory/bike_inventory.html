@@ -156,10 +156,12 @@
                     </div>
 
                     <div class="mt-4">
-                        <button type="button" onclick="submitEditForm({{ bike.id }})" class="w-full p-2 text-white bg-blue-600 rounded-lg">Update Bike</button>
+                        <button type="button" onclick="submitEditForm({{ bike.id }})" class=" w-full p-2 text-white bg-gray-600 rounded-lg">Update Bike</button>
+                    </div>
+                    <div class="mt-4">
+                        <button onclick="closeEditForm({{ bike.id }})" class=" w-full p-2 text-white bg-gray-600 rounded-lg">Cancel</button>
                     </div>
                 </form>
-                <button onclick="closeEditForm({{ bike.id }})" class="w-full mt-2 p-2 text-gray-600 bg-gray-300 rounded-lg">Cancel</button>
             </div>
         </div>
         {% endif %}

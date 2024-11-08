@@ -101,6 +101,52 @@ class MemberView(APIView):
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+    @swagger_auto_schema(
+        request_body=MemberSerializer,
+        manual_parameters=[
+            openapi.Parameter('id', openapi.IN_QUERY, description="ID of the member to update", type=openapi.TYPE_INTEGER),
+        ],
+        responses={
+            200: openapi.Response(
+                description="Member updated successfully",
+                schema=MemberSerializer()
+            ),
+            400: openapi.Response(description="Invalid data or ID not provided"),
+            404: openapi.Response(description="Member not found"),
+            500: openapi.Response(description="Internal server error"),
+        }
+    )
+    def put(self, request, *args, **kwargs):
+        try:
+            member_id = request.query_params.get('id')
+            if not member_id:
+                return Response({"error": "ID must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                member_id = int(member_id)
+            except ValueError:
+                return Response({"error": "ID must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
+
+            member = Member.objects.filter(id=member_id).first()
+            if not member:
+                return Response({"error": "Rental-log not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            data = request.data
+
+            if data:
+                serializer = MemberSerializer(member,data=data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({"message": "Member updated successfully", "data": serializer.data}, status=status.HTTP_200_OK)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"message": "No changes detected."}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @swagger_auto_schema(
         manual_parameters=[

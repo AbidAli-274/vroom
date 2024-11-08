@@ -369,6 +369,52 @@ class RentalLogView(APIView):
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+    @swagger_auto_schema(
+        request_body=RentalLogSerializer,
+        manual_parameters=[
+            openapi.Parameter('id', openapi.IN_QUERY, description="ID of the rental-log to update", type=openapi.TYPE_INTEGER),
+        ],
+        responses={
+            200: openapi.Response(
+                description="Rental-log updated successfully",
+                schema=RentalLogSerializer()
+            ),
+            400: openapi.Response(description="Invalid data or ID not provided"),
+            404: openapi.Response(description="Rental-log not found"),
+            500: openapi.Response(description="Internal server error"),
+        }
+    )
+    def put(self, request, *args, **kwargs):
+        try:
+            rental_log_id = request.query_params.get('id')
+            if not rental_log_id:
+                return Response({"error": "ID must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                rental_log_id = int(rental_log_id)
+            except ValueError:
+                return Response({"error": "ID must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
+
+            rental_log = RentalLog.objects.filter(id=rental_log_id).first()
+            if not rental_log:
+                return Response({"error": "Rental-log not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            data = request.data
+            if data:
+                serializer = RentalLogSerializer(rental_log,data=data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({"message": "Rental-log updated successfully", "data": serializer.data}, status=status.HTTP_200_OK)
+                print(serializer.errors)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"message": "No changes detected."}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @swagger_auto_schema(
         manual_parameters=[
