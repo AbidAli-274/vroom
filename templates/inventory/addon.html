@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mx-auto mt-8">
+    <!-- Search Input -->
+    <div class="flex justify-between mb-4">
+        <input 
+            type="text" 
+            class="w-full sm:w-1/3 p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-500" 
+            placeholder="Search..."
+        />
+        <button 
+            id="addAddonBtn" 
+            class="ml-4 p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+        <i class="fas fa-plus text-white"></i>
+             Addons
+        </button>
+    </div>
+    
+    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Addons</h2>
+    
+    <!-- Add Addon  Form -->
+    <div id="addAddonForm" class="hidden mb-8">
+        <div class="p-4 bg-gray-100 rounded-lg shadow">
+            <h3 class="text-xl font-semibold mb-4">Create Addons</h3>
+            <div id="errorMessage" class="hidden text-red-600 mt-2"></div>
+            <form id="addAddon" method="post" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Addon</label>
+                    <input type="text" name="addon" class="w-full p-3 border border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Rate</label>
+                    <input type="text" name="rate" class="w-full p-3 border border-gray-300 rounded-md" required>
+                </div>
+                <div class="sm:col-span-2">
+                    <button type="submit" class="w-full p-4 text-white bg-gray-600 rounded-lg border border-gray-300 rounded-md  hover:bg-gray-700">Create Addon</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div id="addonTable" class="overflow-x-auto">
+        <table class="min-w-full bg-white border border-gray-200">
+            <thead>
+                <tr class="bg-gray-100 border-b">
+                    <th class="py-3 px-4 text-left border-r border-gray-200">Record Id</th>
+                    <th class="py-3 px-4 text-left border-r border-gray-200">Addon</th>
+                    <th class="py-3 px-4 text-left border-r border-gray-200">Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for addon in addons %}
+                <tr class="hover:bg-gray-50 border-b border-gray-200">
+                    <td class="py-3 px-4 border-r">{{ addon.id}}</td>
+                    <td class="py-3 px-4 border-r">{{ addon.name }}</td>
+                    <td class="py-3 px-4 border-r">{{ addon.rate }}</td>
+                    <td class="flex justify-between items-center gap-2 p-2">
+                        <button class="edit-btn flex items-center gap-2 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600" data-id="{{ addon.id }}" onclick="showEditForm({{ addon.id }})">
+                            <i class="fas fa-edit text-red-500 mr-3"></i>
+                        </button>
+
+                        <!-- Trash button on the right -->
+                        <button class="delete-btn flex items-center gap-2 p-2 bg-red-500 text-white rounded-lg hover:bg-red-600" data-id="{{ addon.id }}">
+                            <i class="fas fa-trash text-red-500"></i>
+                        </button>
+                        
+                    </td>
+                    
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="text-center py-4 text-gray-500">No Addons found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% for addon in addons %}
+        {% if user.is_authenticated %}
+            <div id="editAddonForm-{{ addon.id }}" class="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-75 hidden">
+                <div class="bg-white rounded-lg mx-auto mt-16 p-6 w-2/3">
+                    <h3 class="text-xl font-semibold mb-4">Edit Addon</h3>
+                    <form id="editAddonFormData-{{ addon.id }}" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {% csrf_token %}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Addon</label>
+                            <input type="text" name="name" value="{{ addon.name}}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="addon name" required>
+
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Rate</label>
+                            <input type="text" name="rate" value="{{ addon.rate}}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="rate" required>
+                        </div>                      
+
+                        <div >
+                            <button type="button" onclick="submitEditForm({{ addon.id }})" class="w-full p-4 text-white bg-gray-600 rounded-lg hover:bg-gray-700">Update Addon</button>
+                        </div>
+                        <div>
+                            <button type="button" onclick="closeEditForm({{ addon.id }})" class="w-full p-4 text-white bg-gray-600 rounded-lg hover:bg-gray-500">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+
+    <!-- Pagination Controls -->
+    <div class="flex justify-between items-center mt-4">
+        {% if addons.has_previous %}
+            <a href="?page={{ addons.previous_page_number }}" class="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                Previous
+            </a>
+        {% else %}
+            <span class="p-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">Previous</span>
+        {% endif %}
+
+        <span>Page {{ addons.number }} of {{ addons.paginator.num_pages }}</span>
+
+        {% if addons.has_next %}
+            <a href="?page={{ addons.next_page_number }}" class="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                Next
+            </a>
+        {% else %}
+            <span class="p-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">Next</span>
+        {% endif %}
+    </div>
+
+
+</div>
+
+<script>
+    // Toggle the visibility of the Add Addon form
+    document.getElementById('addAddonBtn').addEventListener('click', function () {
+        const form = document.getElementById('addAddonForm');
+        const table = document.getElementById('addonTable');
+        table.classList.toggle('hidden');
+        form.classList.toggle('hidden');
+    });
+
+    async function submitAddonForm(event) {
+        event.preventDefault(); // Prevent default form submission
+        const form = event.target;
+        const errorMessage = document.getElementById('errorMessage');
+        errorMessage.style.display = 'none'; // Hide previous error message
+        const addonData = {
+            name: form.addon.value,
+            rate: form.rate.value,
+        };
+
+        // Make the POST request to create a new addon
+        try {
+            const response = await fetch('/inventory/addon/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}' 
+                },
+                body: JSON.stringify(addonData)
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create addon');
+            }
+            location.reload();
+        } catch (error) {
+            errorMessage.innerText = error.message; // Show error message
+            errorMessage.style.display = 'block'; // Show error message
+        }
+    }
+
+    document.getElementById('addAddon').addEventListener('submit', submitAddonForm);
+
+    
+    async function deleteAddon(addonId) {
+    try {
+        const response = await fetch(`/inventory/addon/?id=${addonId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken') 
+            }
+        });
+
+        if (response.ok) {
+            location.reload(); // Refresh the list
+        } else {
+            const data = await response.json();
+            alert(data.error || 'An error occurred while deleting the addon.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An unexpected error occurred. Please try again.');
+    }
+}
+
+// Attach event listeners to delete buttons
+document.querySelectorAll('.delete-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const addonId = this.getAttribute('data-id');
+        if (confirm('Are you sure you want to delete this addon?')) {
+            deleteAddon(addonId);
+        }
+    });
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Check if this cookie string begins with the name we want
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
+function showEditForm(addon_ID) {
+    document.getElementById(`editAddonForm-${addon_ID}`).classList.remove('hidden');
+    document.getElementById('addonTable').classList.add('hidden');
+}
+
+
+        function closeEditForm(addon_ID) {
+            document.getElementById(`editAddonForm-${addon_ID}`).classList.add('hidden');
+            document.getElementById('addonTable').classList.remove('hidden');
+        }
+
+        async function submitEditForm(addon_ID) {
+            const form = document.getElementById(`editAddonFormData-${addon_ID}`);
+            const formData = new FormData(form);
+            try {
+                const response = await fetch(`/inventory/addon/?id=${addon_ID}`, {
+                    method: 'PUT',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                });
+
+                if (response.ok) {
+                    alert("Addon updated successfully");
+                    location.reload(); // Reload to reflect changes
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'An error occurred while updating the addon.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An unexpected error occurred. Please try again.');
+            }
+        }
+
+        // Attach event listeners to edit icons
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const addon_ID = this.getAttribute('data-id');
+                showEditForm(addon_ID);
+            });
+        });
+
+</script>
+
+{% endblock %}

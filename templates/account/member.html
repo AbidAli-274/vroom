@@ -27,7 +27,7 @@
                 {% csrf_token %}
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                    <input type="text" name="full_name" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Full Name" required>
+                    <input type="text" name="full_name" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Full Name" >
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Phone</label>
@@ -39,7 +39,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">NRIC</label>
-                    <input type="text" name="nric" class="w-full p-3 border border-gray-300 rounded-md" placeholder="NRIC" required>
+                    <input type="text" name="nric" class="w-full p-3 border border-gray-300 rounded-md" placeholder="NRIC" >
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Date of Birth</label>
@@ -47,7 +47,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Class Passed</label>
-                    <select name="class_passed" class="w-full p-3 border border-gray-300 rounded-md" required>
+                    <select name="class_passed" class="w-full p-3 border border-gray-300 rounded-md" >
                         <option value="">Select Class</option>
                         <option value="2">2</option>
                         <option value="2A">2A</option>
@@ -57,7 +57,7 @@
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Issue Date</label>
-                    <input type="date" name="issue_date" class="w-full p-3 border border-gray-300 rounded-md" required>
+                    <input type="date" name="issue_date" class="w-full p-3 border border-gray-300 rounded-md" >
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Remarks</label>
@@ -101,11 +101,18 @@
                     <td class="py-2 px-4 border-r">{{ member.address }}</td>
                     <td class="py-2 px-4 border-r">{{ member.issue_date }}</td>
                     <td class="py-2 px-4 border-r">{{ member.remarks }}</td>
-                    <td class="py-2 px-4">
-                        <button class="delete-btn p-2 bg-red text-black rounded-lg hover:bg-red" data-id="{{ member.id }}">
-                            <i class="fas fa-trash text-red-500"></i> <!-- Font Awesome delete icon -->
+                    <td class="flex justify-between items-center gap-2 p-2">
+                        <button class="edit-btn flex items-center gap-2 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600" data-id="{{ member.id }}" onclick="showEditForm({{ member.id }})">
+                            <i class="fas fa-edit text-red-500 mr-3"></i>
                         </button>
+
+                        <!-- Trash button on the right -->
+                        <button class="delete-btn flex items-center gap-2 p-2 bg-red-500 text-white rounded-lg hover:bg-red-600" data-id="{{ member.id }}">
+                            <i class="fas fa-trash text-red-500"></i>
+                        </button>
+                        
                     </td>
+                    
                 </tr>
                 {% empty %}
                 <tr>
@@ -115,6 +122,63 @@
             </tbody>
         </table>
     </div>
+
+    {% for member in Members %}
+        {% if user.is_authenticated %}
+            <div id="editMemberForm-{{ member.id }}" class="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-75 hidden">
+                <div class="bg-white rounded-lg mx-auto mt-16 p-6 w-2/3">
+                    <h3 class="text-xl font-semibold mb-4">Edit Member</h3>
+                    <form id="editMemberFormData-{{ member.id }}" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {% csrf_token %}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                            <input type="text" name="full_name" value="{{ member.full_name }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Full Name" >
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Phone</label>
+                            <input type="text" name="phone" value="{{ member.phone }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Phone" >
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" name="email" value="{{ member.email }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Email" >
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">NRIC</label>
+                            <input type="text" name="nric" value="{{ member.nric }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="NRIC" >
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Date of Birth</label>
+                            <input type="date" name="dob" value="{{ member.dob }}" class="w-full p-3 border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Class Passed</label>
+                            <select name="class_passed" class="w-full p-3 border border-gray-300 rounded-md" >
+                                <option value="2" {% if member.class_passed == '2' %}selected{% endif %}>2</option>
+                                <option value="2A" {% if member.class_passed == '2A' %}selected{% endif %}>2A</option>
+                                <option value="2B" {% if member.class_passed == '2B' %}selected{% endif %}>2B</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Address</label>
+                            <textarea rows="1" name="address" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Address">{{ member.address }}</textarea>
+                        </div>
+                        <div >
+                            <label class="block text-sm font-medium text-gray-700">Remarks</label>
+                            <textarea rows="1" name="remarks" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks">{{ member.remarks }}</textarea>
+                        </div>
+                        <div >
+                            <button type="button" onclick="submitEditForm({{ member.id }})" class="w-full p-4 text-white bg-gray-600 rounded-lg hover:bg-gray-700">Update Member</button>
+                        </div>
+                        <div >
+                            <button type="button" onclick="closeEditForm({{ member.id }})" class="w-full p-4 text-white bg-gray-600 rounded-lg hover:bg-gray-500">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+
+    
         <!-- Pagination Controls -->
         <div class="flex justify-between items-center mt-4">
             {% if Members.has_previous %}
@@ -151,7 +215,7 @@
             nric: form.nric.value.trim(),
             dob: form.dob.value || null,
             class_passed: form.class_passed.value.trim(),
-            issue_date: form.issue_date.value,
+            issue_date: form.issue_date.value || null,
             remarks: form.remarks.value.trim(),
             address: form.address.value.trim(),
         };
@@ -228,7 +292,7 @@
             nric: form.nric.value.trim(),
             dob: form.dob.value || null,
             class_passed: form.class_passed.value.trim(),
-            issue_date: form.issue_date.value,
+            issue_date: form.issue_date.value|| null,
             remarks: form.remarks.value.trim(),
             address: form.address.value.trim(),
         };
@@ -319,6 +383,52 @@
         }
         return cookieValue;
     }
+
+    function showEditForm(memberId) {
+    document.getElementById(`editMemberForm-${memberId}`).classList.remove('hidden');
+    document.getElementById('memberTable').classList.add('hidden');
+}
+
+
+        function closeEditForm(memberId) {
+            document.getElementById(`editMemberForm-${memberId}`).classList.add('hidden');
+            document.getElementById('memberTable').classList.remove('hidden');
+        }
+
+        async function submitEditForm(memberId) {
+            const form = document.getElementById(`editMemberFormData-${memberId}`);
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch(`/member/?id=${memberId}`, {
+                    method: 'PUT',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    // body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    alert("Member updated successfully");
+                    location.reload(); // Reload to reflect changes
+                } else {
+                    const data = await response.json();
+                    alert(data.error || 'An error occurred while updating the member.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An unexpected error occurred. Please try again.');
+            }
+        }
+
+        // Attach event listeners to edit icons
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const memberId = this.getAttribute('data-id');
+                showEditForm(memberId);
+            });
+        });
 </script>
 
 {% endblock %}

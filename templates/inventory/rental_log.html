@@ -54,15 +54,11 @@
                     <label class="block text-sm font-medium text-gray-700">End Date & Time</label>
                     <input type="datetime-local" name="end_datetime" class="w-full p-3 border border-gray-300 rounded-md" required>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Rental Days</label>
-                    <input type="number" name="rental_days" class="w-full p-3 border border-gray-300 rounded-md" required>
-                </div>
                 <div >
                     <label class="block text-sm font-medium text-gray-700">Remarks</label>
                     <textarea rows="1" name="remarks" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks"></textarea>
                 </div>
-                <div>
+                <div >
                     <label class="block text-sm font-medium text-gray-700">Addons</label>
                     <select name="addon" class="w-full p-3 border border-gray-300 rounded-md" multiple >
                         {% for addon in addons %}
@@ -85,6 +81,7 @@
                 <tr class="bg-gray-100 border-b">
                     <th class="py-3 px-4 text-left border-r border-gray-200">Member Name</th>
                     <th class="py-3 px-4 text-left border-r border-gray-200">Vehicle</th>
+                    <th class="py-3 px-4 text-left border-r border-gray-200">license plate</th>
                     <th class="py-3 px-4 text-left border-r border-gray-200">Start Date & Time</th>
                     <th class="py-3 px-4 text-left border-r border-gray-200">End Date & Time</th>
                     <th class="py-3 px-4 text-left border-r border-gray-200">Rental Days</th>
@@ -99,6 +96,7 @@
                 <tr class="hover:bg-gray-50 border-b border-gray-200">
                     <td class="py-3 px-4 border-r">{{ log.member.full_name }}</td>
                     <td class="py-3 px-4 border-r">{{ log.vehicle.vehicle }}</td>
+                    <td class="py-3 px-4 border-r">{{ log.vehicle.license_plate }}</td>
                     <td class="py-3 px-4 border-r">{{ log.start_datetime }}</td>
                     <td class="py-3 px-4 border-r">{{ log.end_datetime }}</td>
                     <td class="py-3 px-4 border-r">{{ log.rental_days }}</td>
@@ -112,12 +110,17 @@
                             <span class="text-red-500 font-semibold">No</span>
                         {% endif %}
                     </td>
-                    <td class="py-2 px-4">
-                        <button class="delete-btn p-2 bg-red-600 text-black rounded-lg hover:bg-red-700 " data-id="{{ log.id }}">
-                            <i class="fas fa-trash text-red-500"></i> <!-- Font Awesome delete icon -->
+                    <td class="flex justify-between items-center gap-2 p-2">
+                        <button class="edit-btn flex items-center gap-2 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600" data-id="{{ log.id }}" onclick="showEditForm({{ member.id }})">
+                            <i class="fas fa-edit text-red-500 mr-3"></i>
                         </button>
+
+                        <!-- Trash button on the right -->
+                        <button class="delete-btn flex items-center gap-2 p-2 bg-red-500 text-white rounded-lg hover:bg-red-600" data-id="{{ log.id }}">
+                            <i class="fas fa-trash text-red-500"></i>
+                        </button>
+                        
                     </td>
-                    
                 </tr>
                 {% empty %}
                 <tr>
@@ -127,6 +130,56 @@
             </tbody>
         </table>
     </div>
+
+    {% for log in rental_logs %}
+        {% if user.is_authenticated %}
+            <div id="editRentalForm-{{ log.id }}" class="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-75 hidden">
+                <div class="bg-white rounded-lg mx-auto mt-16 p-6 w-2/3">
+                    <h3 class="text-xl font-semibold mb-4">Edit Rental-Log</h3>
+                    <form id="editRentalFormData-{{ log.id }}" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {% csrf_token %}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Start Date & Time</label>
+                            <input type="datetime-local" name="start_datetime" value="{{ log.start_datetime|date:"Y-m-d\TH:i" }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="start datetime" required>
+
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">End Date & Time</label>
+                            <input type="datetime-local" name="end_datetime" value="{{ log.end_datetime|date:"Y-m-d\TH:i" }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="end datetime" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Paid</label>
+                            <select name="paid" value="{{log.paid}}" class="w-full p-3 border border-gray-300 rounded-md" required>
+                                <option value="True" {% if log.paid == 'True' %}selected{% endif %}>True</option>
+                                <option value="False" {% if log.paid == 'False' %}selected{% endif %}>False</option>
+                            </select>
+                        </div>                        
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Remarks</label>
+                            <input type="text" name="remarks" value="{{ log.remarks }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks" required>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700">Addons</label>
+                            <select name="addon" class="w-full border border-gray-300 rounded-md" multiple >
+                                {% for addon in addons %}
+                                <option value="{{ addon.id }}">{{ addon.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div >
+                            <button type="button" onclick="submitEditForm({{ log.id }})" class="w-full p-4 text-white bg-gray-600 rounded-lg hover:bg-gray-700">Update Rental-log</button>
+                        </div>
+                        <div>
+                            <button type="button" onclick="closeEditForm({{ log.id }})" class="w-full p-4 text-white bg-gray-600 rounded-lg hover:bg-gray-500">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+
+    
 
     <!-- Pagination Controls -->
     <div class="flex justify-between items-center mt-4">
@@ -173,7 +226,6 @@
             vehicle: form.vehicle.value,
             start_datetime: form.start_datetime.value,
             end_datetime: form.end_datetime.value,
-            rental_days: form.rental_days.value,
             addons:addons,
             remarks: form.remarks.value || '',
         };
@@ -251,6 +303,50 @@ function getCookie(name) {
     return cookieValue;
 }
 
+
+    function showEditForm(rental_logId) {
+        document.getElementById(`editRentalForm-${rental_logId}`).classList.remove('hidden');
+        document.getElementById('rentalTable').classList.add('hidden');
+    }
+
+
+    function closeEditForm(rental_logId) {
+        document.getElementById(`editRentalForm-${rental_logId}`).classList.add('hidden');
+        document.getElementById('rentalTable').classList.remove('hidden');
+    }
+
+    async function submitEditForm(rental_logId) {
+        const form = document.getElementById(`editRentalFormData-${rental_logId}`);
+        const formData = new FormData(form);
+        try {
+            const response = await fetch(`/inventory/rental-log/?id=${rental_logId}`, {
+                method: 'PUT',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+            });
+
+            if (response.ok) {
+                alert("Rental-Log updated successfully");
+                location.reload(); // Reload to reflect changes
+            } else {
+                const data = await response.json();
+                alert(data.error || 'An error occurred while updating the rental-log.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An unexpected error occurred. Please try again.');
+        }
+    }
+
+    // Attach event listeners to edit icons
+    document.querySelectorAll('.edit-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const rental_logId = this.getAttribute('data-id');
+            showEditForm(rental_logId);
+        });
+    });
 
 
 </script>

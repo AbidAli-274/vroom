@@ -79,14 +79,14 @@
             </form>
         </div>
     </div>
-
-    <div id="bikeInventory" class="grid grid-flow-row gap-4 mx-auto" style="grid-template-columns: repeat(5, minmax(0, 1fr));">
+    
+    <div id="bikeInventory" class="grid grid-flow-row gap-4 mx-auto" style="grid-template-columns: repeat(6, minmax(0, 1fr));">
         {% for bike in bike_inventory %}
-        <div class="border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 h-full flex flex-col">
+        <div id="bikeCard-{{ bike.id }}" class="border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 flex flex-col">
             <span class="absolute top-2 right-2 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded">
                 {{ bike.status }}
             </span>
-            <a href="#" class="h-full">
+            <a href="javascript:void(0);" class="h-full" onclick="showEditForm(this)" data-unique-id="{{ bike.id }}">
                 {% if bike.photo %}
                     <img class="rounded-t-lg w-full h-full object-cover" src="{{ bike.photo }}" alt="{{ bike.vehicle }}" />
                 {% else %}
@@ -98,77 +98,230 @@
                 <p class="text-black text-sm dark:text-gray-400 mb-1"><small>License Plate:</small> {{ bike.license_plate }}</p>
             </div>
         </div>
+
+        <!-- Edit Bike Form (conditionally rendered if user is logged in) -->
+        {% if user.is_authenticated %}
+        <div id="editBikeForm-{{ bike.id }}" class="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-75 hidden">
+            <div class="bg-white rounded-lg">
+                <h3 class="text-xl font-semibold mb-4">Edit Bike</h3>
+                <form id="editBikeFormData-{{ bike.id }}" enctype="multipart/form-data" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {% csrf_token %}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Vehicle</label>
+                        <input type="text" name="vehicle" value="{{ bike.vehicle }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Vehicle" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Brand</label>
+                        <input type="text" name="brand" value="{{ bike.brand }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Brand" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Color Edition</label>
+                        <input type="text" name="color_edition" value="{{ bike.color_edition }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Color Edition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">License Plate</label>
+                        <input type="text" name="license_plate" value="{{ bike.license_plate }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="License Plate" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Bike Class</label>
+                        <input type="text" name="bike_class" value="{{ bike.bike_class }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Bike Class" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Daily Deposit</label>
+                        <input type="number" name="daily_deposit" value="{{ bike.daily_deposit }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Daily Deposit" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Monthly Deposit</label>
+                        <input type="number" name="monthly_deposit" value="{{ bike.monthly_deposit }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Monthly Deposit" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Daily Rental</label>
+                        <input type="number" name="daily_rental" value="{{ bike.daily_rental }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Daily Rental" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Weekly Rental</label>
+                        <input type="number" name="weekly_rental" value="{{ bike.weekly_rental }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Weekly Rental" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Status</label>
+                        <input type="text" name="status" value="{{ bike.status }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Status">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Remarks</label>
+                        <textarea rows="1" name="remarks" value="{{ bike.remarks }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Photo</label>
+                        <input type="file" name="photo" value="{{ bike.photo }}" class="w-full p-3 border border-gray-300 rounded-md" accept="image/*">
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="button" onclick="submitEditForm({{ bike.id }})" class=" w-full p-2 text-white bg-gray-600 rounded-lg">Update Bike</button>
+                    </div>
+                    <div class="mt-4">
+                        <button onclick="closeEditForm({{ bike.id }})" class=" w-full p-2 text-white bg-gray-600 rounded-lg">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
         {% empty %}
         <div class="text-center py-4">No bikes found in inventory.</div>
         {% endfor %}
     </div>
-    
-    
 </div>
 
-    <!-- Pagination Controls -->
-    <div class="flex justify-between items-center mt-4">
-        {% if bike_inventory.has_previous %}
-            <a href="?page={{ bike_inventory.previous_page_number }}" class="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
-                Previous
-            </a>
-        {% else %}
-            <span class="p-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">Previous</span>
-        {% endif %}
+<!-- Pagination Controls -->
+<div id="paginationControls" class="flex justify-between items-center mt-4">
+    {% if bike_inventory.has_previous %}
+        <a href="?page={{ bike_inventory.previous_page_number }}" class="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+            Previous
+        </a>
+    {% else %}
+        <span class="p-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">Previous</span>
+    {% endif %}
 
-        <span>Page {{ bike_inventory.number }} of {{ bike_inventory.paginator.num_pages }}</span>
+    <span>Page {{ bike_inventory.number }} of {{ bike_inventory.paginator.num_pages }}</span>
 
-        {% if bike_inventory.has_next %}
-            <a href="?page={{ bike_inventory.next_page_number }}" class="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
-                Next
-            </a>
-        {% else %}
-            <span class="p-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">Next</span>
-        {% endif %}
-    </div>
-
+    {% if bike_inventory.has_next %}
+        <a href="?page={{ bike_inventory.next_page_number }}" class="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+            Next
+        </a>
+    {% else %}
+        <span class="p-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">Next</span>
+    {% endif %}
 </div>
 
 <script>
     const HOME_URL = "{% url 'bike' %}";
 
+    function showEditForm(element) {
+        const bikeId = element.getAttribute("data-unique-id");
+        console.log("Showing edit form for bike ID:", bikeId);
+
+        {% if user.is_authenticated %}
+            const editForm = document.getElementById(`editBikeForm-${bikeId}`);
+            const bikeCards = document.querySelectorAll('#bikeInventory > div[id^="bikeCard-"]');
+            const bikeInventory = document.getElementById('bikeInventory');
+            
+            if (editForm) {
+                // Hide all bike cards, including the clicked one
+                bikeCards.forEach(card => {
+                    card.style.display = 'none';
+                });
+
+                // Display the edit form and expand it to full width
+                editForm.style.display = "block";
+                bikeInventory.style.gridTemplateColumns = "repeat(1, minmax(0, 1fr))"; // Set to 1 column
+                editForm.classList.add("w-full"); // Ensures full-width layout
+                togglePagination(false);
+            } else {
+                console.error("Edit form element not found for bike ID:", bikeId);
+            }
+        {% else %}
+            alert("Please log in to edit this bike.");
+        {% endif %}
+    }
+
+    function closeEditForm(bikeId) {
+        const editForm = document.getElementById(`editBikeForm-${bikeId}`);
+        const bikeCards = document.querySelectorAll('#bikeInventory > div[id^="bikeCard-"]');
+        const bikeInventory = document.getElementById('bikeInventory');
+
+        if (editForm) {
+            // Hide the edit form
+            editForm.style.display = "none";
+
+            // Show all bike cards again
+            bikeCards.forEach(card => {
+                card.style.display = 'block';
+            });
+
+            // Reset the layout to original grid settings
+            bikeInventory.style.gridTemplateColumns = "repeat(6, minmax(0, 1fr))"; // Restore 6 columns
+            editForm.classList.remove("w-full"); // Remove full-width setting
+            togglePagination(true);
+        }
+    }
+
+    async function submitEditForm(bikeId) {
+        const form = document.getElementById(`editBikeFormData-${bikeId}`);
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(`/inventory/bike/?id=${bikeId}`, {
+                method: 'PUT',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+
+            if (response.ok) {
+                alert("Bike updated successfully");
+                window.location.reload();
+            } else {
+                const errorData = await response.json();
+                alert(errorData.error || "An error occurred. Please try again.");
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert("An unexpected error occurred. Please try again.");
+        }
+    }
+
+    function togglePagination(show) {
+        const pagination = document.getElementById('paginationControls');
+        pagination.style.display = show ? 'flex' : 'none';
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         async function submitBikeForm(event) {
-            event.preventDefault(); // Prevent the default form submission
+            event.preventDefault();
             const form = document.getElementById('addbike');
-            const errorMessage = document.getElementById('errorMessage'); // Ensure this element exists
-            errorMessage.style.display = 'none'; // Hide error message initially
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.style.display = 'none';
 
-            // Create a FormData object to handle file uploads
             const formData = new FormData(form);
 
             try {
                 const response = await fetch('/inventory/bike/', {
                     method: 'POST',
-                    body: formData, // Send FormData directly
+                    body: formData,
                     headers: {
-                        'X-CSRFToken': getCookie('csrftoken') // Include CSRF token
+                        'X-CSRFToken': getCookie('csrftoken')
                     }
                 });
 
-                // Check if the response is successful
                 if (response.ok) {
-                    const data = await response.json(); // Parse JSON response
-                    window.location.href = HOME_URL; // Redirect to home page
+                    window.location.href = HOME_URL;
                 } else {
-                    // Handle error response
                     const errorData = await response.json();
                     errorMessage.textContent = errorData.error || 'An error occurred. Please try again.';
-                    errorMessage.style.display = 'block'; // Show the error message
+                    errorMessage.style.display = 'block';
                 }
             } catch (error) {
                 console.error('Error:', error);
                 errorMessage.textContent = 'An unexpected error occurred. Please try again.';
-                errorMessage.style.display = 'block'; // Show the error message
+                errorMessage.style.display = 'block';
             }
         }
 
-        // Function to get the CSRF token
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -184,17 +337,36 @@
             return cookieValue;
         }
 
-        // Attach event listener to the form
         document.getElementById('addbike').onsubmit = submitBikeForm;
 
         document.getElementById('addBikeBtn').onclick = function() {
-        const form = document.getElementById('addBikeForm');
-        const inventory = document.getElementById('bikeInventory');
-        
-        form.classList.toggle('hidden');      // Toggle form visibility
-        inventory.classList.toggle('hidden'); // Toggle inventory visibility
-    };
+            const form = document.getElementById('addBikeForm');
+            const inventory = document.getElementById('bikeInventory');
+            
+            form.classList.toggle('hidden');
+            inventory.classList.toggle('hidden');
+            togglePagination(form.classList.contains('hidden'));
+        };
 
+        function showEditForm(bikeId) {
+            console.log("Showing edit form for bike ID:", bikeId);
+            {% if user.is_authenticated %}
+                const editForm = document.getElementById(`editBikeForm-${bikeId}`);
+                if (editForm) {
+                    editForm.style.display = "block";
+                    togglePagination(false);
+                } else {
+                    console.error("Edit form element not found for bike ID:", bikeId);
+                }
+            {% else %}
+                alert("Please log in to edit this bike.");
+            {% endif %}
+        }
+
+        function togglePagination(show) {
+            const pagination = document.getElementById('paginationControls');
+            pagination.style.display = show ? 'flex' : 'none';
+        }
     });
 </script>
 

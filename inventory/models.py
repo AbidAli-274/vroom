@@ -2,12 +2,12 @@ from django.db import models
 from account.models import Member
 
 class BikeInventory(models.Model):
-    vehicle = models.CharField(max_length=100)
+    vehicle = models.CharField(max_length=100,blank=True, null=True)
     photo = models.CharField(max_length=200, blank=True, null=True)
-    brand = models.CharField(max_length=100)
+    brand = models.CharField(max_length=100,blank=True, null=True)
     color_edition = models.CharField(max_length=100, blank=True, null=True)
-    license_plate = models.CharField(max_length=20, unique=True)
-    bike_class = models.CharField(max_length=50)
+    license_plate = models.CharField(max_length=20, blank=True, null=True)
+    bike_class = models.CharField(max_length=50,blank=True, null=True)
     daily_deposit = models.IntegerField(blank=True, null=True)
     monthly_deposit = models.IntegerField(blank=True, null=True)
     daily_rental = models.IntegerField(blank=True, null=True)
@@ -27,8 +27,8 @@ class Addon(models.Model):
 class RentalLog(models.Model):
     vehicle = models.ForeignKey(BikeInventory, on_delete=models.CASCADE, related_name='rental_vehicle')
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='rental_member')
-    start_datetime = models.DateTimeField()
-    end_datetime = models.DateTimeField()
+    start_datetime = models.DateTimeField(blank=True, null=True)
+    end_datetime = models.DateTimeField(blank=True, null=True)
     addons = models.ManyToManyField(Addon, related_name='rental_addons', blank=True, null=True)
     remarks = models.TextField(blank=True, null=True)
     paid = models.BooleanField()
