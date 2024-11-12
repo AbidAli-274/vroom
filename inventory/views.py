@@ -1,5 +1,6 @@
 from django.utils import timezone
 from account.models import Member
+from datetime import datetime
 from inventory.models import BikeInventory,RentalLog,Addon
 from inventory.serializers import BikeInventoryLimitedSerializer, BikeInventorySerializer,AddonSerializer,RentalLogSerializer
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
@@ -233,7 +234,7 @@ class RentalLogView(APIView):
 
             queryset = RentalLog.objects.all().order_by('id')
             if bike_id:
-                queryset = queryset.filter(id=bike_id)
+                queryset = queryset.filter(vehicle=bike_id)
             if historical:
                 if historical.lower() == 'no':
                     queryset = queryset.filter(start_datetime__gte=timezone.now())
@@ -288,10 +289,9 @@ class RentalLogView(APIView):
                 'vehicle': openapi.Schema(type=openapi.TYPE_INTEGER, description="Primary key of BikeInventory, e.g., 'recGufwdq9FCy'"),
                 'start_datetime': openapi.Schema(type=openapi.TYPE_STRING, format='date-time', description="Start date and time for the rental"),
                 'end_datetime': openapi.Schema(type=openapi.TYPE_STRING, format='date-time', description="End date and time for the rental"),
-                'rental_days': openapi.Schema(type=openapi.TYPE_INTEGER, description="Number of rental days"),
                 'addons': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Items(type=openapi.TYPE_INTEGER), description="List of addons by primary keys"), 
             },
-            required=['member', 'vehicle', 'start_datetime', 'end_datetime', 'rental_days'],
+            required=['member', 'vehicle', 'start_datetime', 'end_datetime'],
         ),
         responses={
             201: openapi.Response(
@@ -302,76 +302,46 @@ class RentalLogView(APIView):
         }
     )
     def post(self, request, *args, **kwargs):
-        """
-        Creates a rental log entry with the specified details.
-        """
         try:
             data = request.data
-            paid = data.get('paid', False)
-            rental_days = int(data['rental_days']) 
-            vehicle_id = data['vehicle']
-            vehicle = BikeInventory.objects.get(id=vehicle_id)
-
-            daily_rental = vehicle.daily_rental or 0
-            weekly_rental = vehicle.weekly_rental or 0
-            monthly_deposit = vehicle.monthly_deposit or 0
-            daily_deposit = vehicle.daily_deposit or 0
-
-            if rental_days < 3:
-                rental_price = (daily_rental * rental_days) + 30
-            elif 3 <= rental_days <= 6:
-                rental_price = daily_rental * rental_days
-            elif rental_days == 7:
-                rental_price = weekly_rental
-            else:
-                complete_weeks = rental_days // 7
-                leftover_days = rental_days % 7
-                rental_price = (weekly_rental * complete_weeks) + (daily_rental * leftover_days)
-
-            if rental_days >= 30:
-                price_deposit = rental_price + monthly_deposit
-            else:
-                price_deposit = rental_price + daily_deposit
-
-            addon_price = sum(Addon.objects.filter(id__in=data.get('addons', [])).values_list('rate', flat=True))
-            price_deposit_addon = price_deposit + addon_price
-
-            data['rental_price'] = rental_price
-            data['price_deposit'] = price_deposit
-            data['price_deposit_addon'] = price_deposit_addon
-            data['paid']=paid
-
             serializer = RentalLogSerializer(data=data)
             if serializer.is_valid():
                 rental_log = serializer.save()
                 response_data = {
-                    "id": rental_log.id,  # Assuming the primary key of RentalLog is 'id'
-                    "dailyDeposit": daily_deposit,
-                    "monthlyDeposit": monthly_deposit,
-                    "addonPrice": addon_price,
-                    "rentalPrice": rental_price,
-                    "totalPrice": price_deposit_addon  # This should reflect the price deposit addon
+                    "id": rental_log.id,
+                    "dailyDeposit": rental_log.vehicle.daily_deposit,
+                    "monthlyDeposit": rental_log.vehicle.monthly_deposit,
+                    "addonPrice": rental_log.price_deposit_addon - rental_log.price_deposit,
+                    "rentalPrice": rental_log.rental_price,
+                    "totalPrice": rental_log.price_deposit_addon
                 }
                 if request.accepted_renderer.format == 'html':
                     return JsonResponse(
-                            {
-                                "status": status.HTTP_200_OK,
-                                "message": "Rental-log added successfully!",
-
-                            },
-                            status=status.HTTP_200_OK,
-                        )
+                        {
+                            "status": status.HTTP_200_OK,
+                            "message": "Rental-log added successfully!",
+                        },
+                        status=status.HTTP_200_OK,
+                    )
                 return Response(response_data, status=status.HTTP_201_CREATED)
-            print(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
+            
     @swagger_auto_schema(
-        request_body=RentalLogSerializer,
+            request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'start_datetime': openapi.Schema(type=openapi.TYPE_STRING, format='date-time', description="Start date and time for the rental"),
+                'end_datetime': openapi.Schema(type=openapi.TYPE_STRING, format='date-time', description="End date and time for the rental"),
+                'addons': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Items(type=openapi.TYPE_INTEGER), description="List of addons by primary keys"), 
+                'remarks': openapi.Schema(type=openapi.TYPE_STRING, description="Remarks"), 
+                'paid': openapi.Schema(type=openapi.TYPE_STRING, description="paid (True/False)"), 
+            },
+        ),
         manual_parameters=[
             openapi.Parameter('id', openapi.IN_QUERY, description="ID of the rental-log to update", type=openapi.TYPE_INTEGER),
         ],
@@ -456,6 +426,7 @@ class RentalLogView(APIView):
 class AddonView(APIView):
     permission_classes = [IsAuthenticated]
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'inventory/addon.html'
 
     @swagger_auto_schema(
         responses={
@@ -467,10 +438,13 @@ class AddonView(APIView):
     )
     def get(self, request, *args, **kwargs):
         try:
-            queryset = Addon.objects.all()
+            queryset = Addon.objects.all().order_by('id')
 
             if request.accepted_renderer.format == 'html':
-                return Response({'bike_inventory': queryset}, template_name='account/signup.html')
+                paginator = Paginator(queryset, 6)  
+                page_number = request.query_params.get('page', 1)
+                page_obj = paginator.get_page(page_number)
+                return Response({'addons': page_obj}, template_name='inventory/addon.html')
 
             serializer = AddonSerializer(queryset, many=True)
             return Response(serializer.data)
@@ -495,9 +469,64 @@ class AddonView(APIView):
             serializer = AddonSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
+                if request.accepted_renderer.format == 'html':
+                    return JsonResponse(
+                            {
+                                "status": status.HTTP_200_OK,
+                                "message": "Addon added successfully!",
+
+                            },
+                            status=status.HTTP_200_OK,
+                        )
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @swagger_auto_schema(
+        request_body=AddonSerializer,
+        manual_parameters=[
+            openapi.Parameter('id', openapi.IN_QUERY, description="ID of the addon to update", type=openapi.TYPE_INTEGER),
+        ],
+        responses={
+            200: openapi.Response(
+                description="Addon updated successfully",
+                schema=AddonSerializer()
+            ),
+            400: openapi.Response(description="Invalid data or ID not provided"),
+            404: openapi.Response(description="Addon not found"),
+            500: openapi.Response(description="Internal server error"),
+        }
+    )
+    def put(self, request, *args, **kwargs):
+        try:
+            addon_id = request.query_params.get('id')
+            if not addon_id:
+                return Response({"error": "ID must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                addon_id = int(addon_id)
+            except ValueError:
+                return Response({"error": "ID must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
+
+            addon = Addon.objects.filter(id=addon_id).first()
+            if not addon:
+                return Response({"error": "Addon not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            data = request.data
+            if data:
+                serializer = AddonSerializer(addon,data=data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({"message": "Addon updated successfully", "data": serializer.data}, status=status.HTTP_200_OK)
+                print(serializer.errors)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"message": "No changes detected."}, status=status.HTTP_200_OK)
+
         except Exception as e:
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR

@@ -1,14 +1,13 @@
 from rest_framework import serializers
 from .models import Member,DocumentStorage
 from django.contrib.auth.models import User
-
+from datetime import datetime
 
 class MemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = Member
         fields = "__all__"
-        
-        
+   
 class DocumentStorageSerializer(serializers.ModelSerializer):
     class Meta:
         model = DocumentStorage

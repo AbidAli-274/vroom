@@ -27,7 +27,7 @@
                 {% csrf_token %}
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                    <input type="text" name="full_name" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Full Name" required>
+                    <input type="text" name="full_name" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Full Name" >
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Phone</label>
@@ -39,7 +39,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">NRIC</label>
-                    <input type="text" name="nric" class="w-full p-3 border border-gray-300 rounded-md" placeholder="NRIC" required>
+                    <input type="text" name="nric" class="w-full p-3 border border-gray-300 rounded-md" placeholder="NRIC" >
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Date of Birth</label>
@@ -47,7 +47,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Class Passed</label>
-                    <select name="class_passed" class="w-full p-3 border border-gray-300 rounded-md" required>
+                    <select name="class_passed" class="w-full p-3 border border-gray-300 rounded-md" >
                         <option value="">Select Class</option>
                         <option value="2">2</option>
                         <option value="2A">2A</option>
@@ -57,7 +57,7 @@
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Issue Date</label>
-                    <input type="date" name="issue_date" class="w-full p-3 border border-gray-300 rounded-md" required>
+                    <input type="date" name="issue_date" class="w-full p-3 border border-gray-300 rounded-md" >
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Remarks</label>
@@ -132,19 +132,19 @@
                         {% csrf_token %}
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                            <input type="text" name="full_name" value="{{ member.full_name }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Full Name" required>
+                            <input type="text" name="full_name" value="{{ member.full_name }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Full Name" >
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Phone</label>
-                            <input type="text" name="phone" value="{{ member.phone }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Phone" required>
+                            <input type="text" name="phone" value="{{ member.phone }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Phone" >
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Email</label>
-                            <input type="email" name="email" value="{{ member.email }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Email" required>
+                            <input type="email" name="email" value="{{ member.email }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Email" >
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">NRIC</label>
-                            <input type="text" name="nric" value="{{ member.nric }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="NRIC" required>
+                            <input type="text" name="nric" value="{{ member.nric }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="NRIC" >
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Date of Birth</label>
@@ -152,7 +152,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Class Passed</label>
-                            <select name="class_passed" class="w-full p-3 border border-gray-300 rounded-md" required>
+                            <select name="class_passed" class="w-full p-3 border border-gray-300 rounded-md" >
                                 <option value="2" {% if member.class_passed == '2' %}selected{% endif %}>2</option>
                                 <option value="2A" {% if member.class_passed == '2A' %}selected{% endif %}>2A</option>
                                 <option value="2B" {% if member.class_passed == '2B' %}selected{% endif %}>2B</option>
@@ -215,7 +215,7 @@
             nric: form.nric.value.trim(),
             dob: form.dob.value || null,
             class_passed: form.class_passed.value.trim(),
-            issue_date: form.issue_date.value,
+            issue_date: form.issue_date.value || null,
             remarks: form.remarks.value.trim(),
             address: form.address.value.trim(),
         };
@@ -292,7 +292,7 @@
             nric: form.nric.value.trim(),
             dob: form.dob.value || null,
             class_passed: form.class_passed.value.trim(),
-            issue_date: form.issue_date.value,
+            issue_date: form.issue_date.value|| null,
             remarks: form.remarks.value.trim(),
             address: form.address.value.trim(),
         };

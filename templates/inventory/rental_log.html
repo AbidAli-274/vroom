@@ -54,15 +54,11 @@
                     <label class="block text-sm font-medium text-gray-700">End Date & Time</label>
                     <input type="datetime-local" name="end_datetime" class="w-full p-3 border border-gray-300 rounded-md" required>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Rental Days</label>
-                    <input type="number" name="rental_days" class="w-full p-3 border border-gray-300 rounded-md" required>
-                </div>
                 <div >
                     <label class="block text-sm font-medium text-gray-700">Remarks</label>
                     <textarea rows="1" name="remarks" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks"></textarea>
                 </div>
-                <div>
+                <div >
                     <label class="block text-sm font-medium text-gray-700">Addons</label>
                     <select name="addon" class="w-full p-3 border border-gray-300 rounded-md" multiple >
                         {% for addon in addons %}
@@ -85,6 +81,7 @@
                 <tr class="bg-gray-100 border-b">
                     <th class="py-3 px-4 text-left border-r border-gray-200">Member Name</th>
                     <th class="py-3 px-4 text-left border-r border-gray-200">Vehicle</th>
+                    <th class="py-3 px-4 text-left border-r border-gray-200">license plate</th>
                     <th class="py-3 px-4 text-left border-r border-gray-200">Start Date & Time</th>
                     <th class="py-3 px-4 text-left border-r border-gray-200">End Date & Time</th>
                     <th class="py-3 px-4 text-left border-r border-gray-200">Rental Days</th>
@@ -99,6 +96,7 @@
                 <tr class="hover:bg-gray-50 border-b border-gray-200">
                     <td class="py-3 px-4 border-r">{{ log.member.full_name }}</td>
                     <td class="py-3 px-4 border-r">{{ log.vehicle.vehicle }}</td>
+                    <td class="py-3 px-4 border-r">{{ log.vehicle.license_plate }}</td>
                     <td class="py-3 px-4 border-r">{{ log.start_datetime }}</td>
                     <td class="py-3 px-4 border-r">{{ log.end_datetime }}</td>
                     <td class="py-3 px-4 border-r">{{ log.rental_days }}</td>
@@ -152,8 +150,8 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Paid</label>
                             <select name="paid" value="{{log.paid}}" class="w-full p-3 border border-gray-300 rounded-md" required>
-                                <option value="{{log.paid}}" {% if log.paid == 'True' %}selected{% endif %}>True</option>
-                                <option value="{{log.paid}}" {% if log.paid == 'False' %}selected{% endif %}>False</option>
+                                <option value="True" {% if log.paid == 'True' %}selected{% endif %}>True</option>
+                                <option value="False" {% if log.paid == 'False' %}selected{% endif %}>False</option>
                             </select>
                         </div>                        
                         
@@ -228,7 +226,6 @@
             vehicle: form.vehicle.value,
             start_datetime: form.start_datetime.value,
             end_datetime: form.end_datetime.value,
-            rental_days: form.rental_days.value,
             addons:addons,
             remarks: form.remarks.value || '',
         };
@@ -307,49 +304,49 @@ function getCookie(name) {
 }
 
 
-function showEditForm(rental_logId) {
-    document.getElementById(`editRentalForm-${rental_logId}`).classList.remove('hidden');
-    document.getElementById('rentalTable').classList.add('hidden');
-}
+    function showEditForm(rental_logId) {
+        document.getElementById(`editRentalForm-${rental_logId}`).classList.remove('hidden');
+        document.getElementById('rentalTable').classList.add('hidden');
+    }
 
 
-        function closeEditForm(rental_logId) {
-            document.getElementById(`editRentalForm-${rental_logId}`).classList.add('hidden');
-            document.getElementById('rentalTable').classList.remove('hidden');
-        }
+    function closeEditForm(rental_logId) {
+        document.getElementById(`editRentalForm-${rental_logId}`).classList.add('hidden');
+        document.getElementById('rentalTable').classList.remove('hidden');
+    }
 
-        async function submitEditForm(rental_logId) {
-            const form = document.getElementById(`editRentalFormData-${rental_logId}`);
-            const formData = new FormData(form);
-            try {
-                const response = await fetch(`/inventory/rental-log/?id=${rental_logId}`, {
-                    method: 'PUT',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                });
-
-                if (response.ok) {
-                    alert("Rental-Log updated successfully");
-                    location.reload(); // Reload to reflect changes
-                } else {
-                    const data = await response.json();
-                    alert(data.error || 'An error occurred while updating the rental-log.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An unexpected error occurred. Please try again.');
-            }
-        }
-
-        // Attach event listeners to edit icons
-        document.querySelectorAll('.edit-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const rental_logId = this.getAttribute('data-id');
-                showEditForm(rental_logId);
+    async function submitEditForm(rental_logId) {
+        const form = document.getElementById(`editRentalFormData-${rental_logId}`);
+        const formData = new FormData(form);
+        try {
+            const response = await fetch(`/inventory/rental-log/?id=${rental_logId}`, {
+                method: 'PUT',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
             });
+
+            if (response.ok) {
+                alert("Rental-Log updated successfully");
+                location.reload(); // Reload to reflect changes
+            } else {
+                const data = await response.json();
+                alert(data.error || 'An error occurred while updating the rental-log.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An unexpected error occurred. Please try again.');
+        }
+    }
+
+    // Attach event listeners to edit icons
+    document.querySelectorAll('.edit-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const rental_logId = this.getAttribute('data-id');
+            showEditForm(rental_logId);
         });
+    });
 
 
 </script>
