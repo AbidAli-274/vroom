@@ -56,7 +56,7 @@
                 </div>
                 <div >
                     <label class="block text-sm font-medium text-gray-700">Remarks</label>
-                    <textarea rows="1" name="remarks" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks"></textarea>
+                    <textarea rows="3" name="remarks" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks"></textarea>
                 </div>
                 <div >
                     <label class="block text-sm font-medium text-gray-700">Addons</label>
@@ -182,7 +182,7 @@
     
 
     <!-- Pagination Controls -->
-    <div class="flex justify-between items-center mt-4">
+    <div id="paginationControls" class="flex justify-between items-center mt-4">
         {% if rental_logs.has_previous %}
             <a href="?page={{ rental_logs.previous_page_number }}" class="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
                 Previous
@@ -212,6 +212,13 @@
         const table = document.getElementById('rentalTable');
         table.classList.toggle('hidden');
         form.classList.toggle('hidden');
+        const pagination = document.getElementById('paginationControls'); 
+            // Toggle the visibility of pagination based on table visibility
+    if (!table.classList.contains('hidden')) {
+        pagination.classList.remove('hidden'); // Show pagination
+    } else {
+        pagination.classList.add('hidden'); // Hide pagination
+    }
     });
 
     async function submitRentalLogForm(event) {
@@ -307,12 +314,16 @@ function getCookie(name) {
     function showEditForm(rental_logId) {
         document.getElementById(`editRentalForm-${rental_logId}`).classList.remove('hidden');
         document.getElementById('rentalTable').classList.add('hidden');
+        // Hide pagination when edit form is shown
+    document.getElementById('paginationControls').classList.add('hidden');
     }
 
 
     function closeEditForm(rental_logId) {
         document.getElementById(`editRentalForm-${rental_logId}`).classList.add('hidden');
         document.getElementById('rentalTable').classList.remove('hidden');
+        // Show pagination when table is visible
+    document.getElementById('paginationControls').classList.remove('hidden');
     }
 
     async function submitEditForm(rental_logId) {

@@ -45,7 +45,7 @@ class BikeInventoryVew(APIView):
             queryset = BikeInventory.objects.filter(**filter_criteria) if filter_criteria else BikeInventory.objects.all().order_by('id')
 
             if request.accepted_renderer.format == 'html':
-                paginator = Paginator(queryset, 12)  # Limit of 6 items per page
+                paginator = Paginator(queryset, 18)  # Limit of 6 items per page
                 page_number = request.query_params.get('page', 1)
                 page_obj = paginator.get_page(page_number)
 
@@ -72,9 +72,15 @@ class BikeInventoryVew(APIView):
     )
     def post(self, request, *args, **kwargs):
         try:
-            data = request.data
-            if data['photo']:
-                img=data['photo']
+            data = request.data.copy()
+            if data.get('photo'):
+                img = data['photo']
+            elif data.get('photo_url'):
+                img = data['photo_url']
+            else:
+                img = None
+
+            if img:
                 cloudinary.config(
                     cloud_name = 'daj0lzvak',
                     api_key = '222713357542916',
@@ -102,7 +108,6 @@ class BikeInventoryVew(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         except Exception as e:
-            print(e)
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
@@ -376,7 +381,6 @@ class RentalLogView(APIView):
                 if serializer.is_valid():
                     serializer.save()
                     return Response({"message": "Rental-log updated successfully", "data": serializer.data}, status=status.HTTP_200_OK)
-                print(serializer.errors)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response({"message": "No changes detected."}, status=status.HTTP_200_OK)
@@ -522,7 +526,6 @@ class AddonView(APIView):
                 if serializer.is_valid():
                     serializer.save()
                     return Response({"message": "Addon updated successfully", "data": serializer.data}, status=status.HTTP_200_OK)
-                print(serializer.errors)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response({"message": "No changes detected."}, status=status.HTTP_200_OK)

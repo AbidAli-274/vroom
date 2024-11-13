@@ -111,7 +111,7 @@
     {% endfor %}
 
     <!-- Pagination Controls -->
-    <div class="flex justify-between items-center mt-4">
+    <div id="paginationControls" class="flex justify-between items-center mt-4">
         {% if addons.has_previous %}
             <a href="?page={{ addons.previous_page_number }}" class="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
                 Previous
@@ -139,8 +139,16 @@
     document.getElementById('addAddonBtn').addEventListener('click', function () {
         const form = document.getElementById('addAddonForm');
         const table = document.getElementById('addonTable');
+        const pagination = document.getElementById('paginationControls'); 
+
         table.classList.toggle('hidden');
         form.classList.toggle('hidden');
+        // Toggle the visibility of pagination based on table visibility
+    if (!table.classList.contains('hidden')) {
+        pagination.classList.remove('hidden'); // Show pagination
+    } else {
+        pagination.classList.add('hidden'); // Hide pagination
+    }
     });
 
     async function submitAddonForm(event) {
@@ -228,12 +236,16 @@ function getCookie(name) {
 function showEditForm(addon_ID) {
     document.getElementById(`editAddonForm-${addon_ID}`).classList.remove('hidden');
     document.getElementById('addonTable').classList.add('hidden');
+    // Hide pagination when edit form is shown
+    document.getElementById('paginationControls').classList.add('hidden');
 }
 
 
         function closeEditForm(addon_ID) {
             document.getElementById(`editAddonForm-${addon_ID}`).classList.add('hidden');
             document.getElementById('addonTable').classList.remove('hidden');
+            // Show pagination when table is visible
+    document.getElementById('paginationControls').classList.remove('hidden');
         }
 
         async function submitEditForm(addon_ID) {

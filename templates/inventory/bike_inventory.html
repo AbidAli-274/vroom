@@ -43,7 +43,12 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Bike Class</label>
-                    <input type="text" name="bike_class" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Bike Class" required>
+                    <select name="bike_class" class="w-full p-3 border border-gray-300 rounded-md">
+                        <option value="">Select Class</option>
+                        <option value="In">2</option>
+                        <option value="Out">2A</option>
+                        <option value="Out">2B</option>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Daily Deposit</label>
@@ -63,16 +68,31 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Status</label>
-                    <input type="text" name="status" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Status">
+                    <select name="status" class="w-full p-3 border border-gray-300 rounded-md">
+                        <option value="">Select Status</option>
+                        <option value="In">In</option>
+                        <option value="Out">Out</option>
+                    </select>
                 </div>
+                
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Remarks</label>
                     <textarea rows="1" name="remarks" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks"></textarea>
                 </div>
-                <div>
+                <div >
                     <label class="block text-sm font-medium text-gray-700">Photo</label>
-                    <input type="file" name="photo" class="w-full p-3 border border-gray-300 rounded-md" accept="image/*">
-                </div>
+                    <div class="flex space-x-2">
+                        <div class="flex-1">
+                            <input type="file" name="photo" class="w-full p-1 border border-gray-300 rounded-md" accept="image/*">
+                        </div>
+                        <p>or</p>
+                         
+                        <div class="flex-1">
+                            <input type="text" name="photo_url" class="w-full p-1 border border-gray-300 rounded-md" placeholder=" enter image URL">
+                        </div>
+                    </div>
+                </div>                  
+
                 <div class="sm:col-span-2">
                     <button type="submit" class="w-full p-4 text-white bg-gray-600 rounded-lg hover:bg-gray-700">Add Bike</button>
                 </div>
@@ -83,9 +103,13 @@
     <div id="bikeInventory" class="grid grid-flow-row gap-4 mx-auto" style="grid-template-columns: repeat(6, minmax(0, 1fr));">
         {% for bike in bike_inventory %}
         <div id="bikeCard-{{ bike.id }}" class="border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 flex flex-col">
-            <span class="absolute top-2 right-2 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded">
-                {{ bike.status }}
+            {% if bike.status %}
+            <span class="absolute top-2 right-2 
+                        {% if bike.status|lower == 'in' %} bg-green-600 {% elif bike.status|lower == 'out' %} bg-red-600 {% endif %} 
+                        text-white text-xs font-semibold px-2 py-1  rounded-lg">
+                        {{ bike.status }}
             </span>
+            {% endif %}
             <a href="javascript:void(0);" class="h-full" onclick="showEditForm(this)" data-unique-id="{{ bike.id }}">
                 {% if bike.photo %}
                     <img class="rounded-t-lg w-full h-full object-cover" src="{{ bike.photo }}" alt="{{ bike.vehicle }}" />
@@ -122,9 +146,14 @@
                         <label class="block text-sm font-medium text-gray-700">License Plate</label>
                         <input type="text" name="license_plate" value="{{ bike.license_plate }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="License Plate" required>
                     </div>
+                    </select>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Bike Class</label>
-                        <input type="text" name="bike_class" value="{{ bike.bike_class }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Bike Class" required>
+                        <select name="bike_class" class="w-full p-3 border border-gray-300 rounded-md">
+                            <option value="2" {% if bike.class == "2" %}selected{% endif %}>2</option>
+                            <option value="2A" {% if bike.class == "2A" %}selected{% endif %}>2A</option>
+                            <option value="2B" {% if bike.class == "2B" %}selected{% endif %}>2B</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Daily Deposit</label>
@@ -144,8 +173,12 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Status</label>
-                        <input type="text" name="status" value="{{ bike.status }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Status">
+                        <select name="status" class="w-full p-3 border border-gray-300 rounded-md">
+                            <option value="In" {% if bike.status == "In" %}selected{% endif %}>In</option>
+                            <option value="Out" {% if bike.status == "Out" %}selected{% endif %}>Out</option>
+                        </select>
                     </div>
+                    
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Remarks</label>
                         <textarea rows="1" name="remarks" value="{{ bike.remarks }}" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks"></textarea>
@@ -296,7 +329,6 @@
             const form = document.getElementById('addbike');
             const errorMessage = document.getElementById('errorMessage');
             errorMessage.style.display = 'none';
-
             const formData = new FormData(form);
 
             try {
