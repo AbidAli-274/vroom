@@ -30,8 +30,9 @@
                 {% csrf_token %}
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Member</label>
-                    <select name="member" class="w-full p-3 border border-gray-300 rounded-md" required>
+                    <select id="memberDropdown" name="member" class="w-full p-3 border border-gray-300 rounded-md" required>
                         <option value="">Select Member</option>
+                        <option value="createNew">Create New Member</option>
                         {% for member in members %}
                         <option value="{{ member.id }}">{{ member.full_name }}</option>
                         {% endfor %}
@@ -73,6 +74,15 @@
             </form>
         </div>
     </div>
+
+    <!-- Hidden modal for member creation in dropdown of member -->
+    <div id="createMemberModal" style="display: none;">
+        <label for="newMemberName">Member Name:</label>
+        <input type="text" id="newMemberName" name="newMemberName" placeholder="Enter Member Name">
+        <button id="saveMemberButton">Save</button>
+        <button id="cancelButton">Cancel</button>
+    </div>
+  
 
     <!-- Table -->
     <div id="rentalTable" class="overflow-x-auto">
@@ -221,6 +231,70 @@
     }
     });
 
+    document.getElementById("memberDropdown").addEventListener("change", function () {
+        const selectedValue = this.value;
+
+        if (selectedValue === "createNew") {
+            // Show the modal
+            document.getElementById("createMemberModal").style.display = "block";
+        }
+        });
+
+        document.getElementById("cancelButton").addEventListener("click", function () {
+        document.getElementById("createMemberModal").style.display = "none";
+    });
+
+    //drop down new member creation
+    document.getElementById("saveMemberButton").addEventListener("click", async function () {
+        const newMemberName = document.getElementById("newMemberName").value;
+
+        if (newMemberName.trim() === "") {
+            alert("Please enter a member name.");
+            return;
+        }
+        try {
+            const response = await fetch('/member/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}' 
+                },
+                body: JSON.stringify({ full_name: newMemberName })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create member!');
+            }
+        const dropdown = document.getElementById("memberDropdown");
+        let maxId = 0;
+
+        for (const option of dropdown.options) {
+            const optionValue = parseInt(option.value, 10);
+            if (!isNaN(optionValue)) {
+                maxId = Math.max(maxId, optionValue);
+            }
+        }
+
+        // Assign a new ID incremented by one
+        const newId = maxId + 1;
+        const newOption = document.createElement("option");
+        newOption.value = newId;
+        newOption.textContent = newMemberName;
+        dropdown.appendChild(newOption);
+
+        // Automatically select the newly added member
+        dropdown.value = newId;
+
+        // Hide the modal and reset input
+        document.getElementById("createMemberModal").style.display = "none";
+        document.getElementById("newMemberName").value = "";
+        } catch (error) {
+            errorMessage.innerText = error.message; // Show error message
+            errorMessage.style.display = 'block'; // Show error message
+        }
+    });
+
+
     async function submitRentalLogForm(event) {
         event.preventDefault(); // Prevent default form submission
         const form = event.target;
@@ -312,6 +386,8 @@ function getCookie(name) {
 
 
     function showEditForm(rental_logId) {
+        // Hide the "Add Rental" button
+    document.getElementById('addRentalLogBtn').style.display = 'none';
         document.getElementById(`editRentalForm-${rental_logId}`).classList.remove('hidden');
         document.getElementById('rentalTable').classList.add('hidden');
         // Hide pagination when edit form is shown
@@ -320,6 +396,8 @@ function getCookie(name) {
 
 
     function closeEditForm(rental_logId) {
+         // Show the "Add Rental" button again
+    document.getElementById('addRentalLogBtn').style.display = 'block';
         document.getElementById(`editRentalForm-${rental_logId}`).classList.add('hidden');
         document.getElementById('rentalTable').classList.remove('hidden');
         // Show pagination when table is visible

@@ -48,10 +48,15 @@ class MemberView(APIView):
                 paginator = Paginator(queryset, 10)  # Limit of 6 items per page
                 page_number = request.query_params.get('page', 1)
                 page_obj = paginator.get_page(page_number)
+
+                # Add the file URLs to the context
+                for member in page_obj:
+                    member.files = DocumentStorage.objects.filter(member_id=member.id).values_list('image', flat=True)
+
                 return Response({
                     'Members': page_obj,
                 }, template_name=self.template_name)
-            
+        
             serializer = MemberSerializer(queryset, many=True)
             # Include file URLs for each member in the serialized data
             member_data = serializer.data
@@ -307,3 +312,49 @@ class MemberView(APIView):
 
 
 
+class DocumentView(APIView):
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('id', openapi.IN_QUERY, description="ID of the member", type=openapi.TYPE_INTEGER),
+            openapi.Parameter('file', openapi.IN_QUERY, description="File Path", type=openapi.TYPE_STRING),
+        ],
+        responses={
+            200: openapi.Response(description="File deleted successfully"),
+            400: openapi.Response(description="ID must be provided"),
+            404: openapi.Response(description="Image not found"),
+            500: openapi.Response(description="Internal server error"),
+        }
+    )
+    def delete(self, request, *args, **kwargs):
+        try:
+            id = request.query_params.get('id')
+            file = request.query_params.get('file')
+            if not id or not file:
+                return Response({"error": "ID and file must be provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+            member = Member.objects.filter(id=id).first()
+            file_record = DocumentStorage.objects.filter(member_id=member.id, image=file).first()
+
+            if not file_record:
+                return Response({"error": "File not found in the database"}, status=status.HTTP_404_NOT_FOUND)
+
+            file_path = file_record.image.split('/')[-1]
+
+            if not file_path:
+                return Response({"error": "File path not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+            cloudinary.config(
+                    cloud_name='daj0lzvak',
+                    api_key='222713357542916',
+                    api_secret='fyA1-yiKYPoL0ODKUWfqNse-D54',
+                )
+            result = cloudinary.uploader.destroy(file_path,use_filename=True,resource_type='raw')
+            file_record.delete()
+
+            return Response( status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

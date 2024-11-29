@@ -234,6 +234,8 @@ function getCookie(name) {
 
 
 function showEditForm(addon_ID) {
+    // Hide the "Add Addon" button
+    document.getElementById('addAddonBtn').style.display = 'none';
     document.getElementById(`editAddonForm-${addon_ID}`).classList.remove('hidden');
     document.getElementById('addonTable').classList.add('hidden');
     // Hide pagination when edit form is shown
@@ -242,6 +244,8 @@ function showEditForm(addon_ID) {
 
 
         function closeEditForm(addon_ID) {
+            // Show the "Add Addon" button again
+    document.getElementById('addAddonBtn').style.display = 'block';
             document.getElementById(`editAddonForm-${addon_ID}`).classList.add('hidden');
             document.getElementById('addonTable').classList.remove('hidden');
             // Show pagination when table is visible
