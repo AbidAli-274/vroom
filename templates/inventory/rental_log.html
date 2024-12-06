@@ -18,6 +18,8 @@
              Rental-Log
         </button>
     </div>
+
+    
     
     <h2 class="text-2xl font-semibold mb-4 text-gray-800">Rental Logs</h2>
     
@@ -38,6 +40,7 @@
                         {% endfor %}
                     </select>
                 </div>
+                
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Vehicle</label>
                     <select name="vehicle" class="w-full p-3 border border-gray-300 rounded-md" required>
@@ -67,6 +70,13 @@
                         {% endfor %}
                     </select>
                 </div>
+                <!-- Hidden modal for member creation in dropdown of member -->
+    <div id="createMemberModal" style="display: none;">
+        <label for="newMemberName">Member Name:</label>
+        <input type="text" id="newMemberName" name="newMemberName" placeholder="Enter Member Name" class="p-2 border border-gray-300 rounded-md">
+        <button id="saveMemberButton" class="p-2 text-white bg-gray-600 rounded-lg border border-gray-300  hover:bg-gray-700">Save</button>
+        <button id="cancelButton" class="p-2 text-white bg-gray-600 rounded-lg border border-gray-300 hover:bg-gray-700">Cancel</button>
+    </div>
                 
                 <div class="sm:col-span-2">
                     <button type="submit" class="w-full p-4 text-white bg-gray-600 rounded-lg border border-gray-300 rounded-md  hover:bg-gray-700">Create Rental Log</button>
@@ -75,13 +85,7 @@
         </div>
     </div>
 
-    <!-- Hidden modal for member creation in dropdown of member -->
-    <div id="createMemberModal" style="display: none;">
-        <label for="newMemberName">Member Name:</label>
-        <input type="text" id="newMemberName" name="newMemberName" placeholder="Enter Member Name">
-        <button id="saveMemberButton">Save</button>
-        <button id="cancelButton">Cancel</button>
-    </div>
+    
   
 
     <!-- Table -->
