@@ -1,10 +1,10 @@
 from django.db import models
 
 class Member(models.Model):
-    phone = models.CharField(max_length=15,null=False, blank=False, default='Unknown')
-    email = models.EmailField(unique=True,null=False, blank=False)
+    phone = models.CharField(max_length=15,null=True, blank=True, default='Unknown')
+    email = models.EmailField(unique=True,null=True, blank=True)
     nric = models.CharField(max_length=20, blank=True, null=True)
-    full_name = models.CharField(max_length=100,blank=True, null=True)
+    full_name = models.CharField(max_length=100,blank=False, null=False)
     dob = models.DateField(blank=True, null=True)
     class_passed = models.CharField(max_length=50,blank=True, null=True)
     address = models.TextField(blank=True, null=True)

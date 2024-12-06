@@ -29,7 +29,7 @@ class RentalLog(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='rental_member')
     start_datetime = models.DateTimeField(blank=True, null=True)
     end_datetime = models.DateTimeField(blank=True, null=True)
-    addons = models.ManyToManyField(Addon, related_name='rental_addons', blank=True, null=True)
+    addons = models.ManyToManyField(Addon, related_name='rental_addons', blank=True)
     remarks = models.TextField(blank=True, null=True)
     paid = models.BooleanField()
     rental_days = models.IntegerField()

@@ -229,6 +229,8 @@
     const HOME_URL = "{% url 'bike' %}";
 
     function showEditForm(element) {
+        // Hide the "Add addBikeBtn" button
+    document.getElementById('addBikeBtn').style.display = 'none';
         const bikeId = element.getAttribute("data-unique-id");
         console.log("Showing edit form for bike ID:", bikeId);
 
@@ -257,6 +259,8 @@
     }
 
     function closeEditForm(bikeId) {
+        // Show the "Add addBikeBtn" button again
+    document.getElementById('addBikeBtn').style.display = 'block';
         const editForm = document.getElementById(`editBikeForm-${bikeId}`);
         const bikeCards = document.querySelectorAll('#bikeInventory > div[id^="bikeCard-"]');
         const bikeInventory = document.getElementById('bikeInventory');
@@ -381,7 +385,8 @@
         };
 
         function showEditForm(bikeId) {
-            console.log("Showing edit form for bike ID:", bikeId);
+             // Hide the "Add Rental" button
+    document.getElementById('addRentalLogBtn').style.display = 'none';
             {% if user.is_authenticated %}
                 const editForm = document.getElementById(`editBikeForm-${bikeId}`);
                 if (editForm) {

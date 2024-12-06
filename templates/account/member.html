@@ -27,15 +27,15 @@
                 {% csrf_token %}
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                    <input type="text" name="full_name" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Full Name" >
+                    <input type="text" name="full_name" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Full Name" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Phone</label>
-                    <input type="text" name="phone" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Phone" required>
+                    <input type="text" name="phone" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Phone" >
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" name="email" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Email" required>
+                    <input type="email" name="email" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Email" >
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">NRIC</label>
@@ -128,6 +128,7 @@
         </table>
     </div>
 
+    <!-- Edit Member Form -->
     {% for member in Members %}
         {% if user.is_authenticated %}
             <div id="editMemberForm-{{ member.id }}" class="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-75 hidden">
@@ -168,14 +169,38 @@
                             <label class="block text-sm font-medium text-gray-700">Remarks</label>
                             <textarea rows="1" name="remarks" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks">{{ member.remarks }}</textarea>
                         </div>
-                        <div  >
-                            <label class="block text-sm font-medium text-gray-700">Upload Documents</label>
-                            <input type="file" accept="*" name="file" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Choose a file" multiple>
-                        </div>  
-                        <div class="sm:col-span-2">
+                        
+
+                        <div >
                             <label class="block text-sm font-medium text-gray-700">Address</label>
                             <textarea rows="1" name="address" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Address">{{ member.address }}</textarea>
                         </div>
+
+
+                        <div id="deleteFile">
+                            <label class="block text-sm font-medium text-gray-700">Uploaded Files</label>
+                            {% if member.files %}
+                                <ul class="list-disc pl-5">
+                                    {% for file_url in member.files %}
+                                        <li class="flex items-center space-x-2">
+                                            <a href="{{ file_url }}" target="_blank" class="text-blue-600">{{ file_url }} </a>
+                                            <button class="delete-file-button" data-file="{{ file_url }}" data-id="{{ member.id }}">
+                                                <i class="fas fa-trash text-red-500"></i>
+                                            </button>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p>No files uploaded yet.</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div  class="sm:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700">Upload Documents</label>
+                            <input type="file" accept="*" name="file" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Choose a file" multiple>
+                        </div> 
+
+                        
                         <div >
                             <button type="button" onclick="submitEditForm({{ member.id }})" class="w-full p-4 text-white bg-gray-600 rounded-lg hover:bg-gray-700">Update Member</button>
                         </div>
@@ -310,6 +335,40 @@
     }
         });
 
+    document.querySelectorAll(".delete-file-button").forEach(button => {
+        button.addEventListener("click", async function () {
+            event.preventDefault();
+            const file = this.getAttribute("data-file");
+            const id = this.getAttribute("data-id");
+            try {
+                const response = await fetch(`/document/?id=${id}&file=${encodeURIComponent(file)}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                });
+                console.log("response: ",response)
+                if (response.ok) {
+                    this.closest("li").remove();
+                } 
+                else {
+                    const data = await response.json();
+                    alert(data.error || 'An error occurred while deleting the file.');}
+
+                
+            } catch (error) {
+                const errorMessage = document.createElement('div');
+                errorMessage.innerText = error.message;
+                errorMessage.style.display = 'block';
+                errorMessage.style.color = 'red';
+                document.body.appendChild(errorMessage); // You may want to append it somewhere more appropriate
+            }
+        });
+    });
+
+    
+
     // Function to get CSRF token
     function getCookie(name) {
         let cookieValue = null;
@@ -327,6 +386,8 @@
     }
 
     function showEditForm(memberId) {
+        // Hide the "Add Member" button
+    document.getElementById('addMemberBtn').style.display = 'none';
     document.getElementById(`editMemberForm-${memberId}`).classList.remove('hidden');
     document.getElementById('memberTable').classList.add('hidden');
     // Hide pagination when edit form is shown
@@ -335,6 +396,8 @@
 
 
         function closeEditForm(memberId) {
+            // Show the "Add Member" button again
+    document.getElementById('addMemberBtn').style.display = 'block';
             document.getElementById(`editMemberForm-${memberId}`).classList.add('hidden');
             document.getElementById('memberTable').classList.remove('hidden');
             // Show pagination when table is visible
