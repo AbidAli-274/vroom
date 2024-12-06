@@ -2,6 +2,8 @@
 
 {% block content %}
 
+
+
 <div class="container mx-auto mt-8">
     <!-- Search Input -->
     <div class="flex justify-between mb-4">
@@ -60,23 +62,26 @@
                 </div>
                 <div >
                     <label class="block text-sm font-medium text-gray-700">Remarks</label>
-                    <textarea rows="3" name="remarks" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks"></textarea>
+                    <textarea rows="1" name="remarks" class="w-full p-3 border border-gray-300 rounded-md" placeholder="Remarks"></textarea>
                 </div>
                 <div >
                     <label class="block text-sm font-medium text-gray-700">Addons</label>
-                    <select name="addon" class="w-full p-3 border border-gray-300 rounded-md" multiple >
+                    <select id="my-multiselect" name="addon" multiple class="w-full p-2 border border-gray-300 rounded-md shadow">
                         {% for addon in addons %}
                         <option value="{{ addon.id }}">{{ addon.name }}</option>
                         {% endfor %}
                     </select>
+                    
                 </div>
+
+
                 <!-- Hidden modal for member creation in dropdown of member -->
-    <div id="createMemberModal" style="display: none;">
-        <label for="newMemberName">Member Name:</label>
-        <input type="text" id="newMemberName" name="newMemberName" placeholder="Enter Member Name" class="p-2 border border-gray-300 rounded-md">
-        <button id="saveMemberButton" class="p-2 text-white bg-gray-600 rounded-lg border border-gray-300  hover:bg-gray-700">Save</button>
-        <button id="cancelButton" class="p-2 text-white bg-gray-600 rounded-lg border border-gray-300 hover:bg-gray-700">Cancel</button>
-    </div>
+                <div id="createMemberModal" style="display: none;">
+                    <label for="newMemberName">Member Name:</label>
+                    <input type="text" id="newMemberName" name="newMemberName" placeholder="Enter Member Name" class="p-2 border border-gray-300 rounded-md">
+                    <button id="saveMemberButton" class="p-2 text-white bg-gray-600 rounded-lg border border-gray-300  hover:bg-gray-700">Save</button>
+                    <button id="cancelButton" class="p-2 text-white bg-gray-600 rounded-lg border border-gray-300 hover:bg-gray-700">Cancel</button>
+                </div>
                 
                 <div class="sm:col-span-2">
                     <button type="submit" class="w-full p-4 text-white bg-gray-600 rounded-lg border border-gray-300 rounded-md  hover:bg-gray-700">Create Rental Log</button>
@@ -125,7 +130,7 @@
                         {% endif %}
                     </td>
                     <td class="flex justify-between items-center gap-2 p-2">
-                        <button class="edit-btn flex items-center gap-2 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600" data-id="{{ log.id }}" onclick="showEditForm({{ member.id }})">
+                        <button class="edit-btn flex items-center gap-2 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600" data-id="{{ log.id }}" onclick="showEditForm({{ log.id }})">
                             <i class="fas fa-edit text-red-500 mr-3"></i>
                         </button>
 
@@ -145,6 +150,7 @@
         </table>
     </div>
 
+    <!-- Edit Rental Log Form -->
     {% for log in rental_logs %}
         {% if user.is_authenticated %}
             <div id="editRentalForm-{{ log.id }}" class="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-75 hidden">
@@ -175,11 +181,16 @@
                         </div>
                         <div class="sm:col-span-2">
                             <label class="block text-sm font-medium text-gray-700">Addons</label>
-                            <select name="addon" class="w-full border border-gray-300 rounded-md" multiple >
+                            
+                            <select class="my-multiselect2" name="addons" multiple class="w-full p-2 border border-gray-300 rounded-md shadow">
                                 {% for addon in addons %}
-                                <option value="{{ addon.id }}">{{ addon.name }}</option>
+                                    <option value="{{ addon.id }}"
+                                        {% if addon in log.addons.all %}selected{% endif %}>
+                                        {{ addon.name }}
+                                    </option>
                                 {% endfor %}
                             </select>
+
                         </div>
                         <div >
                             <button type="button" onclick="submitEditForm({{ log.id }})" class="w-full p-4 text-white bg-gray-600 rounded-lg hover:bg-gray-700">Update Rental-log</button>
@@ -220,6 +231,31 @@
 </div>
 
 <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const myChoices = new Choices('#my-multiselect', {
+            removeItemButton: true, // Adds a remove button for each selected item
+            placeholder: true,
+            placeholderValue: 'Select options...', // Placeholder text
+            searchEnabled: true, // Enable search
+        });
+    });
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Select all elements with the class 'my-multiselect2'
+        const multiselectElements = document.querySelectorAll('.my-multiselect2');
+
+        // Initialize Choices.js for each element
+        multiselectElements.forEach(element => {
+            new Choices(element, {
+                removeItemButton: true, // Adds a remove button for each selected item
+                placeholder: true,
+                placeholderValue: 'Select options...', // Placeholder text
+                searchEnabled: true, // Enable search
+            });
+        });
+    });
+
     // Toggle the visibility of the Add Rental Log form
     document.getElementById('addRentalLogBtn').addEventListener('click', function () {
         const form = document.getElementById('addRentalLogForm');
@@ -440,8 +476,6 @@ function getCookie(name) {
             showEditForm(rental_logId);
         });
     });
-
-
 </script>
 
 {% endblock %}

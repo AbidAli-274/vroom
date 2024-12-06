@@ -238,6 +238,7 @@ class RentalLogView(APIView):
             historical = request.query_params.get('historical')
 
             queryset = RentalLog.objects.all().order_by('id')
+
             if bike_id:
                 queryset = queryset.filter(vehicle=bike_id)
             if historical:
@@ -270,6 +271,7 @@ class RentalLogView(APIView):
                 members = Member.objects.all()
                 vehicles = BikeInventory.objects.all()
                 addons = Addon.objects.all()
+
 
                 return Response({
                     'rental_logs': page_obj,
@@ -332,7 +334,6 @@ class RentalLogView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
-            print(e)
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
@@ -376,13 +377,15 @@ class RentalLogView(APIView):
             if not rental_log:
                 return Response({"error": "Rental-log not found"}, status=status.HTTP_404_NOT_FOUND)
 
-            data = request.data
+            data=request.data
             if data:
-                serializer = RentalLogSerializer(rental_log,data=data, partial=True)
+                # Pass the modified data to the serializer
+                serializer = RentalLogSerializer(rental_log, data=data, partial=True)
                 if serializer.is_valid():
                     serializer.save()
                     return Response({"message": "Rental-log updated successfully", "data": serializer.data}, status=status.HTTP_200_OK)
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response({"message": "No changes detected."}, status=status.HTTP_200_OK)
 
@@ -390,6 +393,7 @@ class RentalLogView(APIView):
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
 
     @swagger_auto_schema(
         manual_parameters=[
