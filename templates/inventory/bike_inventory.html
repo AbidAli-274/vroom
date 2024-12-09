@@ -102,7 +102,7 @@
     
     <div id="bikeInventory" class="grid grid-flow-row gap-4 mx-auto" style="grid-template-columns: repeat(6, minmax(0, 1fr));">
         {% for bike in bike_inventory %}
-        <div id="bikeCard-{{ bike.id }}" class="border border-gray-200 rounded-lg shadow  dark:border-gray-700 flex flex-col">
+        <div id="bikeCard-{{ bike.id }}" class="border border-gray-200 rounded-lg shadow  dark:border-gray-700 flex flex-col bg-white">
             {% if bike.status %}
             <span class="absolute top-2 right-2 
                         {% if bike.status|lower == 'in' %} bg-green-600 {% elif bike.status|lower == 'out' %} bg-red-600 {% endif %} 
