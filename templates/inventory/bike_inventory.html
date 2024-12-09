@@ -110,11 +110,11 @@
                         {{ bike.status }}
             </span>
             {% endif %}
-            <a href="javascript:void(0);" class="h-full" onclick="showEditForm(this)" data-unique-id="{{ bike.id }}">
+            <a href="javascript:void(0);" onclick="showEditForm(this)" data-unique-id="{{ bike.id }}">
                 {% if bike.photo %}
-                    <img class="rounded-t-lg w-full h-full object-cover" src="{{ bike.photo }}" alt="{{ bike.vehicle }}" />
+                    <img class="rounded-t-lg  object-cover" src="{{ bike.photo }}" alt="{{ bike.vehicle }}" style="width: 200px; height: 150px;"/>
                 {% else %}
-                    <img class="rounded-t-lg w-full h-full object-cover" src="http://res.cloudinary.com/daj0lzvak/image/upload/v1730906546/img-no_xlktml.jpg" alt="No photo available" />
+                    <img class="rounded-t-lg  object-cover" src="https://res.cloudinary.com/daj0lzvak/image/upload/v1733745348/noImg_zf6toy.jpg" alt="No photo available" style="width: 200px; height: 150px;"/>
                 {% endif %}
             </a>
             <div class="p-5 bg-white flex-grow">

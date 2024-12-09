@@ -11,6 +11,7 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.utils.datastructures import MultiValueDict
 import cloudinary
+import cloudinary.api
 import cloudinary.uploader
 class HomeView(APIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
@@ -224,6 +225,7 @@ class MemberView(APIView):
 
             data = request.data
             files=[]
+
             if 'file' in data:
                 if isinstance(data, MultiValueDict):
                     files = data.getlist('file') 
@@ -233,6 +235,9 @@ class MemberView(APIView):
                 files = request.FILES.getlist('file')  
 
             new_file_urls = []  
+
+            if data.get("email") == "None":
+                data["email"] = None
 
             if files:
                 cloudinary.config(
@@ -267,14 +272,12 @@ class MemberView(APIView):
                         serializer_data = serializer.data
                         serializer_data['files'] = []  
                         return Response({"message": "Member updated successfully without files.", "data": serializer_data}, status=status.HTTP_200_OK)
-
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
             else:
                 return Response({"message": "No changes detected."}, status=status.HTTP_200_OK)
 
         except Exception as e:
-            print(e)
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
@@ -300,16 +303,37 @@ class MemberView(APIView):
             member = Member.objects.filter(id=id).first()
             if not member:
                 return Response({"error": "Member not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+            file_records = DocumentStorage.objects.filter(member_id=member.id)
 
+            if file_records:
+                # Extract all file paths (public IDs) for deletion
+                public_ids = [
+                    file_record.image.split('/')[-1]
+                    for file_record in file_records 
+                    if file_record.image  # Ensure image field is not empty
+                ]
+                # Configure Cloudinary
+                cloudinary.config(
+                    cloud_name='daj0lzvak',
+                    api_key='222713357542916',
+                    api_secret='fyA1-yiKYPoL0ODKUWfqNse-D54',
+                )
+
+                # Delete all files in a single API call
+                if public_ids:
+                    result = cloudinary.api.delete_resources(public_ids,resource_type='raw',use_filename=True)
+
+            file_records.delete()
             member.delete()
 
             return Response( status=status.HTTP_200_OK)
 
         except Exception as e:
+            print(e)
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
 
 
 class DocumentView(APIView):

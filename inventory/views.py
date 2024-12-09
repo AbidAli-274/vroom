@@ -1,5 +1,5 @@
 from django.utils import timezone
-from account.models import Member
+from account.models import DocumentStorage, Member
 from datetime import datetime
 from inventory.models import BikeInventory,RentalLog,Addon
 from inventory.serializers import BikeInventoryLimitedSerializer, BikeInventorySerializer,AddonSerializer,RentalLogSerializer
@@ -205,6 +205,15 @@ class BikeInventoryVew(APIView):
             bike = BikeInventory.objects.filter(id=bike_id).first()
             if bike is None:
                 return Response({"error": "Bike not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+            if bike.photo:
+                public_id = bike.photo.split('/')[-1].split('.')[0]
+                cloudinary.config(
+                        cloud_name='daj0lzvak',
+                        api_key='222713357542916',
+                        api_secret='fyA1-yiKYPoL0ODKUWfqNse-D54',
+                    )
+                result = cloudinary.uploader.destroy(public_id,use_filename=True)
 
             bike.delete()
 
