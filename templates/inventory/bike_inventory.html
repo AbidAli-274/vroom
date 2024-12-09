@@ -102,7 +102,7 @@
     
     <div id="bikeInventory" class="grid grid-flow-row gap-4 mx-auto" style="grid-template-columns: repeat(6, minmax(0, 1fr));">
         {% for bike in bike_inventory %}
-        <div id="bikeCard-{{ bike.id }}" class="border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 flex flex-col">
+        <div id="bikeCard-{{ bike.id }}" class="border border-gray-200 rounded-lg shadow  dark:border-gray-700 flex flex-col">
             {% if bike.status %}
             <span class="absolute top-2 right-2 
                         {% if bike.status|lower == 'in' %} bg-green-600 {% elif bike.status|lower == 'out' %} bg-red-600 {% endif %} 
@@ -112,14 +112,14 @@
             {% endif %}
             <a href="javascript:void(0);" onclick="showEditForm(this)" data-unique-id="{{ bike.id }}">
                 {% if bike.photo %}
-                    <img class="rounded-t-lg  object-cover" src="{{ bike.photo }}" alt="{{ bike.vehicle }}" style="width: 200px; height: 150px;"/>
+                    <img class="object-cover" src="{{ bike.photo }}" alt="{{ bike.vehicle }}" style="width: 200px; height: 150px;"/>
                 {% else %}
-                    <img class="rounded-t-lg  object-cover" src="https://res.cloudinary.com/daj0lzvak/image/upload/v1733745348/noImg_zf6toy.jpg" alt="No photo available" style="width: 200px; height: 150px;"/>
+                    <img class="object-cover" src="https://res.cloudinary.com/daj0lzvak/image/upload/v1733745348/noImg_zf6toy.jpg" alt="No photo available" style="width: 200px; height: 150px;"/>
                 {% endif %}
             </a>
-            <div class="p-5 bg-white flex-grow">
-                <p class="text-black text-sm dark:text-gray-400 mb-1"><small>Vehicle:</small> {{ bike.vehicle }}</p>
-                <p class="text-black text-sm dark:text-gray-400 mb-1"><small>License Plate:</small> {{ bike.license_plate }}</p>
+            <div class="p-5 bg-white flex-grow rounded-md">
+                <p class="text-black text-sm dark:text-gray-400 mb-1" style="padding-left:3px;"><small>Vehicle:</small> {{ bike.vehicle }}</p>
+                <p class="text-black text-sm dark:text-gray-400 mb-1" style="padding-left:3px;"><small>License Plate:</small> {{ bike.license_plate }}</p>
             </div>
         </div>
 
